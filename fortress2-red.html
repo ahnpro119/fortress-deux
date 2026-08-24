@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="포트리스2" />
+  <meta name="theme-color" content="#070910" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./icon-180.png" />
+  <link rel="icon" type="image/png" href="./icon-192.png" />
+  <title>포트리스 2 RED</title>
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin:0; padding:0; width:100%; height:100%; background:#070910; color:#fff; font-family:'Noto Sans KR','Malgun Gothic',sans-serif; overflow:hidden; overscroll-behavior:none; touch-action:manipulation; }
+    #stage { position:fixed; top:0; left:0; width:100%; height:100%; background:#070910; overflow:hidden; }
+    #stage.rotated { transform:rotate(90deg); transform-origin:top left; }
+    #intro { position:absolute; inset:0; z-index:80; background:#05070f; }
+    #intro.hide { display:none; }
+    #introCanvas { position:absolute; inset:0; width:100%; height:100%; }
+    #introUI { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; text-align:center; }
+    #tapGate { pointer-events:auto; cursor:pointer; padding:28px; position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    #tapGate h1 { margin:0 0 10px; color:#ffeb3b; font-size:clamp(28px,6vw,48px); text-shadow:0 0 18px #ff9800; }
+    #tapGate p { margin:0; color:#9adfff; letter-spacing:2px; animation:blink 1s infinite alternate; }
+    #introTitle { opacity:0; transform:scale(.6); color:#ffeb3b; font-size:clamp(32px,7vw,58px); text-shadow:3px 3px 0 #000,0 0 24px #ff9800; font-weight:900; }
+    #introTitle.show { animation:titleIn .7s cubic-bezier(.2,1.4,.3,1) forwards; }
+    #introSub { opacity:0; color:#00e5ff; margin-top:8px; letter-spacing:3px; font-weight:700; }
+    #introSub.show { animation:fadeUp .6s .3s forwards; }
+    @keyframes titleIn { to { opacity:1; transform:scale(1); } }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+    @keyframes blink { from{opacity:.55} to{opacity:1} }
+    #app { width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+    #scale-slot { width:800px; height:500px; }
+    #fortress-game { position:relative; width:800px; height:500px; background:#000; overflow:hidden; user-select:none; border:3px solid #334; border-radius:8px; transform-origin:top left; box-shadow:0 10px 30px rgba(0,0,0,.8); }
+    #fortress-game canvas { display:block; image-rendering:pixelated; touch-action:none; }
+    #fortress-game .screen { position:absolute; inset:0; z-index:10; background:rgba(10,12,24,.95); display:flex; flex-direction:column; justify-content:center; align-items:center; padding:12px; text-align:center; }
+    .mode-select { display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; justify-content:center; }
+    .mode-btn,.btn { border-radius:10px; font-weight:800; cursor:pointer; min-height:44px; }
+    .mode-btn { padding:10px 16px; background:#1a1d2e; color:#aaa; border:2px solid #3d4668; }
+    .mode-btn.active { background:#00e5ff; color:#000; border-color:#fff; }
+    .btn { padding:12px 28px; font-size:18px; color:#fff; background:linear-gradient(#ff9800,#e65100); border:2px solid #fff; box-shadow:0 4px 0 #993d00; }
+    .tank-info-box { background:#181b2c; border:1px dashed #00e5ff; border-radius:8px; padding:10px; margin-bottom:12px; max-width:520px; font-size:12px; color:#ccc; }
+    .hud { position:absolute; top:8px; left:8px; right:56px; display:none; justify-content:space-between; align-items:center; background:rgba(0,0,0,.85); padding:6px 10px; border:2px solid #556; border-radius:6px; font-size:12px; pointer-events:none; z-index:5; }
+    .center-info { text-align:center; display:flex; flex-direction:column; align-items:center; }
+    .wind-badge { background:#111; border:1px solid #00e5ff; color:#00e5ff; padding:1px 8px; border-radius:10px; font-size:11px; font-weight:700; margin-top:2px; }
+    .timer-badge { background:#ff1744; color:#fff; font-weight:800; font-size:13px; padding:1px 7px; border-radius:4px; margin-top:2px; animation:blink 1s infinite alternate; }
+    .power-container { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); width:260px; height:16px; background:#111; border:2px solid #fff; display:none; z-index:5; }
+    .power-bar { width:0; height:100%; background:linear-gradient(to right,#ffeb3b,#ff5722); }
+    .turn-indicator { position:absolute; top:62px; left:50%; transform:translateX(-50%); background:rgba(0,229,255,.9); color:#000; font-weight:800; padding:4px 12px; font-size:12px; border-radius:12px; display:none; z-index:5; white-space:nowrap; }
+    #musicBtn { position:absolute; top:8px; right:8px; z-index:20; width:40px; height:40px; border-radius:50%; border:2px solid #00e5ff; background:rgba(10,12,24,.9); color:#00e5ff; font-size:16px; }
+    #touch-hud { display:none; position:absolute; inset:0; pointer-events:none; z-index:40; }
+    #touch-hud.show { display:block; }
+    .pad { pointer-events:auto; position:absolute; left:max(10px,env(safe-area-inset-left)); bottom:max(10px,env(safe-area-inset-bottom)); display:grid; grid-template-columns:58px 58px; grid-template-rows:52px 52px; gap:8px; }
+    .pad button,#fireBtn { pointer-events:auto; border:2px solid rgba(255,255,255,.35); background:rgba(20,24,44,.72); color:#fff; border-radius:14px; font-weight:900; font-size:20px; backdrop-filter:blur(6px); }
+    .pad button.held,#fireBtn.held { background:#00e5ff; color:#000; border-color:#fff; }
+    #fireWrap { pointer-events:auto; position:absolute; right:max(10px,env(safe-area-inset-right)); bottom:max(10px,env(safe-area-inset-bottom)); width:118px; display:flex; flex-direction:column; gap:6px; }
+    #fireBtn { height:112px; font-size:22px; background:linear-gradient(to bottom,rgba(255,152,0,.92),rgba(230,81,0,.92)); border-color:#fff; }
+    #fireBtn.held { background:linear-gradient(#ffeb3b,#ff5722); }
+    #fireHelp { text-align:center; font-size:10px; color:#c9d2ef; text-shadow:0 1px 2px #000; }
+    #installTip { display:none; position:absolute; left:50%; bottom:12px; transform:translateX(-50%); z-index:70; background:rgba(8,12,28,.94); border:1px solid #00e5ff; border-radius:12px; padding:10px 14px; font-size:12px; width:min(420px,92%); text-align:center; }
+    #installTip.show { display:block; }
+    #installTip b { color:#ffeb3b; }
+  </style>
+</head>
+<body>
+<div id="stage">
+<div id="intro">
+  <canvas id="introCanvas"></canvas>
+  <div id="introUI">
+    <div id="tapGate"><h1>포트리스 2 RED</h1><p>화면을 탭하세요 · TAP TO START</p></div>
+    <div id="introTitle">포트리스 2 RED</div>
+    <div id="introSub">CLASSIC 100%</div>
+  </div>
+</div>
+<div id="app">
+  <div id="scale-slot">
+    <div id="fortress-game">
+      <button id="musicBtn" type="button">♪</button>
+      <canvas id="fCanvas" width="800" height="500"></canvas>
+      <div id="fTurnIndicator" class="turn-indicator">1P 턴</div>
+      <div id="fLobby" class="screen">
+        <h2 style="color:#ffeb3b;margin:0 0 8px;font-size:24px;text-shadow:2px 2px #000;">포트리스 2 RED Classic</h2>
+        <div class="mode-select">
+          <button class="mode-btn active" id="fModeAI" type="button">10단계 AI</button>
+          <button class="mode-btn" id="fModePvp" type="button">2인 대전</button>
+        </div>
+        <div class="tank-info-box">왼쪽 패드로 이동/각도 · 오른쪽 FIRE를 길게 눌러 충전 후 손을 떼면 발사</div>
+        <button class="btn" id="fStartBtn" type="button">게임 시작</button>
+      </div>
+      <div id="fOver" class="screen" style="display:none;">
+        <h1 id="fResult" style="color:#ffeb3b;margin:0 0 8px;">VICTORY!</h1>
+        <p id="fSubText" style="color:#ccc;margin:0 0 16px;">다음 단계로 이동합니다.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+          <button class="btn" id="fNextBtn" type="button">다음 단계로</button>
+          <button class="btn" id="fRetryBtn" type="button" style="background:linear-gradient(#555,#222);box-shadow:0 4px 0 #111;">로비</button>
+        </div>
+      </div>
+      <div id="fHud" class="hud">
+        <div><b id="fP1Name" style="color:#ffeb3b;">[1P]</b><br>HP <span id="fP1Hp">100</span> · <span id="fAngle">45</span>°</div>
+        <div class="center-info">
+          <span id="fMapName" style="color:#00e5ff;font-weight:700;font-size:11px;">Valley</span>
+          <span id="fStageLabel" style="color:#ffeb3b;font-weight:800;">STAGE 1 / 10</span>
+          <div id="fWindBadge" class="wind-badge">바람 ▶ 0.0</div>
+          <div id="fTimerBadge" class="timer-badge">🕒 10초</div>
+        </div>
+        <div style="text-align:right;"><b id="fP2Name" style="color:#ff5252;">[2P]</b><br>HP <span id="fP2Hp">100</span> · <span id="fP2Angle">135</span>°<div id="fAiLevelTag" style="color:#ff5252;font-size:11px;font-weight:800;">LV.1</div></div>
+      </div>
+      <div id="fPowerContainer" class="power-container"><div id="fPowerBar" class="power-bar"></div></div>
+    </div>
+  </div>
+</div>
+<div id="touch-hud">
+  <div class="pad">
+    <button type="button" data-code="ArrowUp">↑</button>
+    <button type="button" data-code="ArrowDown">↓</button>
+    <button type="button" data-code="ArrowLeft">←</button>
+    <button type="button" data-code="ArrowRight">→</button>
+  </div>
+  <div id="fireWrap"><button type="button" id="fireBtn">FIRE</button><div id="fireHelp">길게=충전 / 떼기=발사</div></div>
+</div>
+<div id="installTip">아이폰: 사파리 하단 <b>공유</b> → <b>홈 화면에 추가</b> 하면 앱처럼 가로 전체화면으로 실행됩니다.<div style="margin-top:8px;"><button class="btn" type="button" id="closeTip" style="min-height:36px;padding:6px 16px;font-size:13px;">확인</button></div></div>
+</div>
+<script>
+(function(){
+  const keys={}; let gameMode='AI';
+  let audioCtx=null,masterGain=null,bgmMuted=false,bgmStarted=false,bgmTimer=null,bgmStep=0;
+  let moveOsc=null,moveGain=null,isMovingSound=false;
+  function isStandalone(){ return window.navigator.standalone===true || window.matchMedia('(display-mode: standalone)').matches; }
+  function isTouchDevice(){ return window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window || navigator.maxTouchPoints>0; }
+  function midi(n){ return 440*Math.pow(2,(n-69)/12); }
+  function ensureAudio(){
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended') audioCtx.resume();
+    if(!masterGain){ masterGain=audioCtx.createGain(); masterGain.gain.value=bgmMuted?0:0.2; masterGain.connect(audioCtx.destination); }
+    return audioCtx;
+  }
+  function tone(freq,dur,type,vol,t0){
+    if(!audioCtx||bgmMuted) return;
+    const osc=audioCtx.createOscillator(),g=audioCtx.createGain();
+    osc.type=type||'square'; osc.frequency.setValueAtTime(freq,t0);
+    g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(vol||0.07,t0+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+    osc.connect(g); g.connect(masterGain); osc.start(t0); osc.stop(t0+dur+0.02);
+  }
+  function kick(t0){
+    if(!audioCtx||bgmMuted) return;
+    const osc=audioCtx.createOscillator(),g=audioCtx.createGain();
+    osc.type='sine'; osc.frequency.setValueAtTime(150,t0); osc.frequency.exponentialRampToValueAtTime(40,t0+0.12);
+    g.gain.setValueAtTime(0.16,t0); g.gain.exponentialRampToValueAtTime(0.0001,t0+0.14);
+    osc.connect(g); g.connect(masterGain); osc.start(t0); osc.stop(t0+0.15);
+  }
+  function hat(t0){
+    if(!audioCtx||bgmMuted) return;
+    const n=audioCtx.sampleRate*0.03, buf=audioCtx.createBuffer(1,n,audioCtx.sampleRate), data=buf.getChannelData(0);
+    for(let i=0;i<n;i++) data[i]=Math.random()*2-1;
+    const src=audioCtx.createBufferSource(); src.buffer=buf;
+    const g=audioCtx.createGain(), f=audioCtx.createBiquadFilter(); f.type='highpass'; f.frequency.value=7000;
+    g.gain.setValueAtTime(0.035,t0); g.gain.exponentialRampToValueAtTime(0.0001,t0+0.03);
+    src.connect(f); f.connect(g); g.connect(masterGain); src.start(t0);
+  }
+  const BASS=[33,33,0,33,28,28,0,31,33,33,36,33,31,28,26,28];
+  const LEAD=[69,0,72,69,76,72,69,0,67,69,71,72,76,0,74,72,69,72,76,81,79,76,72,0,71,72,74,76,72,69,64,0];
+  function startBgm(){
+    ensureAudio(); if(bgmStarted) return; bgmStarted=true;
+    function tick(){
+      if(!audioCtx) return;
+      const t0=audioCtx.currentTime+0.02, i=bgmStep%32;
+      if(BASS[i%BASS.length]) tone(midi(BASS[i%BASS.length]),0.15,'triangle',0.11,t0);
+      if(LEAD[i%LEAD.length]) tone(midi(LEAD[i%LEAD.length]),0.14,'square',0.045,t0);
+      if(i%4===0) kick(t0); if(i%2===0) hat(t0); bgmStep++;
+    }
+    tick(); bgmTimer=setInterval(tick,170);
+  }
+  function setMuted(m){ bgmMuted=m; if(masterGain&&audioCtx) masterGain.gain.setTargetAtTime(m?0:0.2,audioCtx.currentTime,0.05); document.getElementById('musicBtn').textContent=m?'🔇':'♪'; }
+  document.getElementById('musicBtn').onclick=function(e){ e.stopPropagation(); ensureAudio(); startBgm(); setMuted(!bgmMuted); };
+  function viewSize(){
+    const portrait = window.innerHeight > window.innerWidth;
+    return portrait ? { w: window.innerHeight, h: window.innerWidth } : { w: window.innerWidth, h: window.innerHeight };
+  }
+  function applyLandscapeView(){
+    const stage = document.getElementById('stage');
+    const portrait = window.innerHeight > window.innerWidth;
+    if (portrait) {
+      stage.classList.add('rotated');
+      stage.style.width = window.innerHeight + 'px';
+      stage.style.height = window.innerWidth + 'px';
+      stage.style.top = '0px';
+      stage.style.left = window.innerWidth + 'px';
+    } else {
+      stage.classList.remove('rotated');
+      stage.style.width = '100%';
+      stage.style.height = '100%';
+      stage.style.top = '0px';
+      stage.style.left = '0px';
+    }
+    fitGame();
+  }
+  function lockLandscape(){
+    const root = document.documentElement;
+    try {
+      if (root.requestFullscreen) root.requestFullscreen().catch(function(){});
+      else if (root.webkitRequestFullscreen) root.webkitRequestFullscreen();
+    } catch (e) {}
+    try {
+      if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(function(){});
+      }
+    } catch (e) {}
+    applyLandscapeView();
+  }
+  function fitGame(){
+    const game=document.getElementById('fortress-game'), slot=document.getElementById('scale-slot'), hud=document.getElementById('touch-hud');
+    hud.classList.toggle('show', (isTouchDevice()||Math.min(window.innerWidth,window.innerHeight)<=920) && document.getElementById('intro').classList.contains('hide'));
+    const vs = viewSize();
+    const scale=Math.min(Math.max(280,vs.w-8)/800, Math.max(160,vs.h-8)/500);
+    game.style.transform='scale('+scale+')'; slot.style.width=(800*scale)+'px'; slot.style.height=(500*scale)+'px';
+  }
+  function playOpening(){
+    const gate=document.getElementById('tapGate'), title=document.getElementById('introTitle'), sub=document.getElementById('introSub');
+    const canvas=document.getElementById('introCanvas'), ctx=canvas.getContext('2d');
+    const vs=viewSize(); canvas.width=vs.w; canvas.height=vs.h;
+    gate.style.display='none'; title.classList.add('show'); setTimeout(()=>sub.classList.add('show'),400);
+    const stars=Array.from({length:80},()=>({x:Math.random(),y:Math.random()*0.7,s:Math.random()*2+0.5}));
+    const t0=performance.now();
+    function tank(x,y,flip,frame){
+      ctx.save(); ctx.translate(x,y); if(flip) ctx.scale(-1,1);
+      ctx.fillStyle='#111'; ctx.fillRect(-22,-6,44,10);
+      ctx.fillStyle='#455a64'; ctx.fillRect(-16,-18,32,14);
+      ctx.fillStyle='#ff5722'; ctx.fillRect(8,-16,26,7);
+      ctx.fillStyle='#fff'; ctx.fillRect(4,-16,6,6); ctx.fillStyle='#000'; ctx.fillRect(6,-14,3,3);
+      const sh=frame%2; ctx.fillStyle='#888'; ctx.fillRect(-18+sh,-2,8,6); ctx.fillRect(-4+sh,-2,8,6); ctx.fillRect(10+sh,-2,8,6);
+      ctx.restore();
+    }
+    function frame(now){
+      const t=(now-t0)/1000, w=canvas.width, h=canvas.height, groundY=h*0.72;
+      const sky=ctx.createLinearGradient(0,0,0,h); sky.addColorStop(0,'#020514'); sky.addColorStop(1,'#1a1030');
+      ctx.fillStyle=sky; ctx.fillRect(0,0,w,h);
+      stars.forEach(s=>{ ctx.fillStyle='rgba(255,255,255,'+(0.4+Math.sin(t*3+s.x*10)*0.3)+')'; ctx.fillRect(s.x*w,s.y*h,s.s,s.s); });
+      ctx.fillStyle='#122607'; ctx.beginPath(); ctx.moveTo(0,h); ctx.lineTo(0,groundY);
+      for(let x=0;x<=w;x+=8) ctx.lineTo(x,groundY-Math.sin(x*0.02+t)*10); ctx.lineTo(w,h); ctx.fill();
+      ctx.strokeStyle='#7be026'; ctx.lineWidth=4; ctx.beginPath();
+      for(let x=0;x<=w;x+=8){ const y=groundY-Math.sin(x*0.02+t)*10; if(x===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); } ctx.stroke();
+      const ease=1-Math.pow(1-Math.min(1,t/1.6),3);
+      tank(w*0.22*ease+20, groundY-4, false, Math.floor(t*10));
+      tank(w-(w*0.22*ease+20), groundY-4, true, Math.floor(t*10));
+      if(t>2.2){ ctx.fillStyle='rgba(255,235,59,'+(Math.max(0,1-(t-2.2)*2)*0.35)+')'; ctx.fillRect(0,0,w,h); }
+      if(t<3.8) requestAnimationFrame(frame);
+      else {
+        document.getElementById('intro').classList.add('hide'); fitGame();
+        if(!isStandalone() && isTouchDevice()) document.getElementById('installTip').classList.add('show');
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+  let introStarted=false;
+  function startIntro(){
+    if(introStarted) return;
+    introStarted=true;
+    lockLandscape();
+    ensureAudio();
+    startBgm();
+    playOpening();
+  }
+  document.getElementById('tapGate').addEventListener('pointerup', startIntro);
+  document.getElementById('closeTip').onclick=()=>document.getElementById('installTip').classList.remove('show');
+
+  function setGameMode(mode){ gameMode=mode; document.getElementById('fModeAI').classList.toggle('active',mode==='AI'); document.getElementById('fModePvp').classList.toggle('active',mode==='PVP'); }
+  document.getElementById('fModeAI').onclick=()=>setGameMode('AI');
+  document.getElementById('fModePvp').onclick=()=>setGameMode('PVP');
+
+  const canvas=document.getElementById('fCanvas'), ctx=canvas.getContext('2d');
+  const terrainCanvas=document.createElement('canvas'); terrainCanvas.width=800; terrainCanvas.height=500; const tCtx=terrainCanvas.getContext('2d');
+  const MAPS=[
+    {name:'Valley of City',sky:['#020514','#070f2b','#101a40','#1c2854'],bgType:'city',soilTop:'#2b5016',soilBottom:'#122607',grass:'#7be026',fn:x=>220+Math.pow(Math.abs(x-400)/400,2)*160+Math.sin(x*0.04)*6},
+    {name:'The Sphinx',sky:['#170312','#3d0824','#713336','#b8441d'],bgType:'sphinx',soilTop:'#b04d16',soilBottom:'#592206',grass:'#ffd700',fn:x=>380-Math.sin((x/800)*Math.PI)*110+Math.sin(x*0.03)*12},
+    {name:'Cross Country',sky:['#010e1a','#052233','#0e4154','#1f6182'],bgType:'snow',soilTop:'#425b68',soilBottom:'#1c2c36',grass:'#ffffff',fn:x=>330-Math.cos(x*0.012)*80+Math.sin(x*0.035)*25}
+  ];
+  const SKINS=[
+    {id:'cannon',name:'캐논 (Cannon)',count:1,baseDmg:52,cSize:36,isPoison:false},
+    {id:'carrot',name:'캐롯 (Carrot)',count:3,baseDmg:17,cSize:20,isPoison:false},
+    {id:'missile',name:'미사일 (Missile)',count:4,baseDmg:13,cSize:18,isPoison:false},
+    {id:'multi',name:'멀티미사일 (Multi)',count:9,baseDmg:7,cSize:14,isPoison:false},
+    {id:'poseidon',name:'포세이돈 (Poseidon)',count:3,baseDmg:16,cSize:22,isPoison:false},
+    {id:'secwind',name:'디그다 (Secwind)',count:3,baseDmg:16,cSize:24,isPoison:false},
+    {id:'crossbow',name:'크로스보우 (Crossbow)',count:2,baseDmg:20,cSize:22,isPoison:true,poisonDmg:6},
+    {id:'supertank',name:'슈퍼탱크 (Super)',count:3,baseDmg:30,cSize:28,isPoison:false},
+    {id:'duke',name:'듀크 (Duke)',count:2,baseDmg:22,cSize:26,isPoison:true,poisonDmg:8},
+    {id:'catapult',name:'캐터펄트 (Catapult)',count:1,baseDmg:48,cSize:34,isPoison:false}
+  ];
+  const stars=Array.from({length:70},()=>({x:Math.random()*800,y:Math.random()*250,size:Math.random()*2+0.5,alpha:Math.random()}));
+  const clouds=[{x:40,y:50,speed:0.15,scale:1.2},{x:320,y:35,speed:0.1,scale:0.8},{x:600,y:70,speed:0.18,scale:1}];
+  let currentMap=MAPS[0],wind=0,turnTimeLeft=10,turnTimerInterval=null,currentStage=1,turn='P1',isOver=false;
+  let bullets=[],explosions=[],particles=[],poisonClouds=[],animFrame=0,isCharging=false,currentPower=0,powerDir=1.2,isAiMoving=false;
+  let bulletCheckTimer=null,aiMoveInterval=null,aiFireTimeout=null,fireInterval=null;
+  const p1={x:120,y:0,vy:0,maxHp:100,hp:100,angle:45,skin:SKINS[0]}, p2={x:680,y:0,vy:0,maxHp:100,hp:100,angle:135,skin:SKINS[0]};
+  function resetTerrain(stage){
+    currentMap=MAPS[(stage-1)%MAPS.length]; tCtx.clearRect(0,0,800,500);
+    tCtx.beginPath(); tCtx.moveTo(0,500); for(let x=0;x<=800;x++) tCtx.lineTo(x,currentMap.fn(x)); tCtx.lineTo(800,500); tCtx.closePath();
+    const g=tCtx.createLinearGradient(0,200,0,500); g.addColorStop(0,currentMap.soilTop); g.addColorStop(1,currentMap.soilBottom); tCtx.fillStyle=g; tCtx.fill();
+    tCtx.beginPath(); for(let x=0;x<=800;x++){ if(x===0)tCtx.moveTo(x,currentMap.fn(x)); else tCtx.lineTo(x,currentMap.fn(x)); } tCtx.lineWidth=5; tCtx.strokeStyle=currentMap.grass; tCtx.stroke();
+  }
+  function getTerrainY(x){ const ix=Math.max(0,Math.min(799,Math.round(x))), img=tCtx.getImageData(ix,0,1,500).data; for(let y=0;y<500;y++) if(img[y*4+3]>100) return y; return 550; }
+  function destroyTerrain(x,y,r){ tCtx.save(); tCtx.globalCompositeOperation='destination-out'; tCtx.beginPath(); tCtx.arc(x,y,r,0,Math.PI*2); tCtx.fill(); tCtx.restore(); }
+  function startMoveSound(){ ensureAudio(); if(isMovingSound||!audioCtx) return; moveOsc=audioCtx.createOscillator(); moveGain=audioCtx.createGain(); moveOsc.type='sawtooth'; moveOsc.frequency.setValueAtTime(110,audioCtx.currentTime); moveGain.gain.setValueAtTime(0.05,audioCtx.currentTime); moveOsc.connect(moveGain); moveGain.connect(audioCtx.destination); moveOsc.start(); isMovingSound=true; }
+  function stopMoveSound(){ if(isMovingSound&&moveGain){ moveGain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.05); setTimeout(()=>{ if(moveOsc){try{moveOsc.stop();}catch(e){}} isMovingSound=false; },50); } }
+  function playShootSound(){ ensureAudio(); if(!audioCtx) return; const osc=audioCtx.createOscillator(),gain=audioCtx.createGain(); osc.type='square'; osc.frequency.setValueAtTime(320,audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(40,audioCtx.currentTime+0.2); gain.gain.setValueAtTime(0.18,audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.2); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime+0.2); }
+  function playExplodeSound(){ ensureAudio(); if(!audioCtx) return; const n=audioCtx.sampleRate*0.3,buf=audioCtx.createBuffer(1,n,audioCtx.sampleRate),data=buf.getChannelData(0); for(let i=0;i<n;i++) data[i]=Math.random()*2-1; const src=audioCtx.createBufferSource(); src.buffer=buf; const gain=audioCtx.createGain(); gain.gain.setValueAtTime(0.28,audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.3); src.connect(gain); gain.connect(audioCtx.destination); src.start(); }
+  function canControlNow(){ if(isOver||bullets.length>0) return false; if(document.getElementById('fLobby').style.display!=='none') return false; if(document.getElementById('fOver').style.display==='flex') return false; return turn==='P1' || (turn==='P2'&&gameMode==='PVP'); }
+  function beginCharge(){ if(canControlNow()&&!isCharging){ isCharging=true; currentPower=0; powerDir=1.2; } }
+  function releaseCharge(){ if(!isCharging) return; isCharging=false; fire(turn,turn==='P1'?p1:p2,(turn==='P1'?p1:p2).skin,1,currentPower); currentPower=0; document.getElementById('fPowerBar').style.width='0%'; }
+  window.addEventListener('keydown',e=>{ ensureAudio(); startBgm(); if(e.code==='Space'){ e.preventDefault(); beginCharge(); } keys[e.code]=true; });
+  window.addEventListener('keyup',e=>{ if(e.code==='Space'){ e.preventDefault(); releaseCharge(); } keys[e.code]=false; });
+  function bindHold(el,on,off){ const down=ev=>{ev.preventDefault();on();}; const up=ev=>{ev.preventDefault();off();}; el.addEventListener('pointerdown',down); el.addEventListener('pointerup',up); el.addEventListener('pointercancel',up); }
+  document.querySelectorAll('.pad button').forEach(btn=>{ const code=btn.getAttribute('data-code'); bindHold(btn,()=>{keys[code]=true;btn.classList.add('held');},()=>{keys[code]=false;btn.classList.remove('held');}); });
+  const fireBtn=document.getElementById('fireBtn');
+  bindHold(fireBtn,()=>{fireBtn.classList.add('held');beginCharge();},()=>{fireBtn.classList.remove('held');releaseCharge();});
+  function clearAllTimers(){ stopMoveSound(); [turnTimerInterval,bulletCheckTimer,aiMoveInterval,fireInterval].forEach(id=>{ if(id) clearInterval(id); }); if(aiFireTimeout) clearTimeout(aiFireTimeout); turnTimerInterval=bulletCheckTimer=aiMoveInterval=fireInterval=aiFireTimeout=null; }
+  function randomizeWind(){ wind=(Math.random()-0.5)*0.12; document.getElementById('fWindBadge').innerText='바람 '+(wind>=0?'▶':'◀')+' '+(Math.abs(wind)*100).toFixed(1); }
+  function startTurnTimer(){ if(turnTimerInterval) clearInterval(turnTimerInterval); turnTimeLeft=10; document.getElementById('fTimerBadge').innerText='🕒 '+turnTimeLeft+'초'; turnTimerInterval=setInterval(()=>{ if(isOver||bullets.length>0) return; turnTimeLeft--; document.getElementById('fTimerBadge').innerText='🕒 '+turnTimeLeft+'초'; if(turnTimeLeft<=0){ clearInterval(turnTimerInterval); isCharging=false; currentPower=0; document.getElementById('fPowerBar').style.width='0%'; fireBtn.classList.remove('held'); switchTurn(); } },1000); }
+  function getRandomTank(){ if(Math.random()<0.05) return SKINS.find(s=>s.id==='supertank'); const f=SKINS.filter(s=>s.id!=='supertank'); return f[Math.floor(Math.random()*f.length)]; }
+  function initStage(stage){
+    ensureAudio(); startBgm(); clearAllTimers(); resetTerrain(stage); currentStage=stage;
+    p1.skin=getRandomTank(); p2.skin=getRandomTank();
+    p1.maxHp=100; p1.hp=100; p1.x=120; p1.vy=0; p1.y=getTerrainY(p1.x); p1.angle=45;
+    const aiHp=gameMode==='AI'?Math.round(100+(stage-1)*(350/9)):100;
+    p2.maxHp=aiHp; p2.hp=aiHp; p2.x=680; p2.vy=0; p2.y=getTerrainY(p2.x); p2.angle=135;
+    turn='P1'; isOver=false; bullets=[]; explosions=[]; particles=[]; poisonClouds=[]; isCharging=false; currentPower=0; isAiMoving=false;
+    document.getElementById('fMapName').innerText=currentMap.name;
+    document.getElementById('fStageLabel').innerText=gameMode==='AI'?('STAGE '+stage+' / 10'):'VERSUS';
+    document.getElementById('fP1Name').innerText='[1P '+p1.skin.name.split(' ')[0]+']';
+    document.getElementById('fP2Name').innerText=gameMode==='AI'?('[AI '+p2.skin.name.split(' ')[0]+']'):('[2P '+p2.skin.name.split(' ')[0]+']');
+    document.getElementById('fP1Hp').innerText=p1.hp+'/'+p1.maxHp; document.getElementById('fP2Hp').innerText=p2.hp+'/'+p2.maxHp;
+    document.getElementById('fAngle').innerText=String(p1.angle); document.getElementById('fP2Angle').innerText=String(p2.angle);
+    const titles=['LV.1 초보','LV.2 훈련병','LV.3 일반병','LV.4 베테랑','LV.5 용병','LV.6 엘리트','LV.7 저격수','LV.8 챔피언','LV.9 마스터','LV.10 보스'];
+    document.getElementById('fAiLevelTag').style.display=gameMode==='AI'?'block':'none';
+    if(gameMode==='AI') document.getElementById('fAiLevelTag').innerText=titles[stage-1];
+    document.getElementById('fLobby').style.display='none'; document.getElementById('fOver').style.display='none';
+    document.getElementById('fHud').style.display='flex'; document.getElementById('fPowerContainer').style.display='block';
+    randomizeWind(); updateTurnUI(); startTurnTimer();
+  }
+  function updateTurnUI(){ if(isOver) return; const el=document.getElementById('fTurnIndicator'); el.style.display='block'; if(turn==='P1'){ el.innerText='1P 턴'; el.style.background='rgba(0,229,255,.9)'; } else if(gameMode==='AI'){ el.innerText='AI 계산 중...'; el.style.background='rgba(255,82,82,.9)'; } else { el.innerText='2P 턴'; el.style.background='rgba(255,235,59,.9)'; } }
+  document.getElementById('fStartBtn').onclick=function(){ lockLandscape(); initStage(1); };
+  document.getElementById('fNextBtn').onclick=()=>initStage((currentStage>=10&&gameMode==='AI')?1:currentStage+1);
+  document.getElementById('fRetryBtn').onclick=()=>{ clearAllTimers(); bullets=[]; explosions=[]; particles=[]; poisonClouds=[]; isOver=false; isCharging=false; document.getElementById('fHud').style.display='none'; document.getElementById('fOver').style.display='none'; document.getElementById('fPowerContainer').style.display='none'; document.getElementById('fTurnIndicator').style.display='none'; document.getElementById('fLobby').style.display='flex'; };
+  function fire(owner,shooter,skin,dmgMult,shotPower){
+    if(isOver) return; if(turnTimerInterval) clearInterval(turnTimerInterval); let fired=0; if(fireInterval) clearInterval(fireInterval);
+    fireInterval=setInterval(()=>{
+      if(isOver){ clearInterval(fireInterval); return; } playShootSound();
+      const rad=-shooter.angle*Math.PI/180, spd=Math.max(4,shotPower)*0.14, spreadY=skin.id==='multi'?(fired-4)*1.5:0;
+      bullets.push({x:shooter.x+Math.cos(rad)*28,y:shooter.y-12+Math.sin(rad)*28+spreadY,vx:Math.cos(rad)*spd,vy:Math.sin(rad)*spd,rotation:0,owner,skin,dmgMult,alive:true});
+      fired++; if(fired>=skin.count){ clearInterval(fireInterval); waitBullets(); }
+    }, skin.id==='multi'?80:140);
+  }
+  function createExplosion(x,y,crater,skin){
+    playExplodeSound(); explosions.push({x,y,radius:4,maxRadius:crater}); destroyTerrain(x,y,crater);
+    if(skin.isPoison) poisonClouds.push({x,y,radius:skin.id==='duke'?45:30,damage:skin.poisonDmg,duration:180,opacity:0.7});
+    let pColor=currentMap.grass; if(skin.id==='crossbow'||skin.id==='duke') pColor='#76ff03'; else if(skin.id==='catapult') pColor='#ff3d00';
+    for(let i=0;i<20;i++){ const a=Math.random()*Math.PI*2,s=Math.random()*4+1; particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1,size:Math.random()*3+2,color:i%2===0?'#ff9800':pColor,life:1,decay:0.03}); }
+  }
+  function waitBullets(){ if(bulletCheckTimer) clearInterval(bulletCheckTimer); bulletCheckTimer=setInterval(()=>{ bullets=bullets.filter(b=>b.alive); if(bullets.length===0&&explosions.length===0){ clearInterval(bulletCheckTimer); bulletCheckTimer=null; if(!isOver){ if(p2.hp<=0||p1.hp<=0) endGame(p2.hp<=0); else switchTurn(); } } },100); }
+  function executeEnemyTurn(){
+    if(isOver) return;
+    const moveDistance=(Math.random()*currentStage*10+10)*(Math.random()>0.5?1:-1), targetX=Math.max(420,Math.min(760,p2.x+moveDistance)), step=targetX>p2.x?1.5:-1.5;
+    isAiMoving=true; startMoveSound(); if(aiMoveInterval) clearInterval(aiMoveInterval);
+    aiMoveInterval=setInterval(()=>{
+      if(isOver){ clearInterval(aiMoveInterval); stopMoveSound(); isAiMoving=false; return; }
+      if(Math.abs(p2.x-targetX)>2){ p2.x+=step; p2.y=getTerrainY(p2.x); }
+      else {
+        clearInterval(aiMoveInterval); aiMoveInterval=null; stopMoveSound(); isAiMoving=false;
+        if(aiFireTimeout) clearTimeout(aiFireTimeout);
+        aiFireTimeout=setTimeout(()=>{
+          if(isOver) return; p2.angle=Math.floor(120+Math.random()*30); document.getElementById('fP2Angle').innerText=String(p2.angle);
+          const gravity=0.15,dx=p1.x-p2.x,dy=p1.y-p2.y,rad=-p2.angle*Math.PI/180,cos=Math.cos(rad); let exact=55;
+          if(Math.abs(cos)>0.05){ const denom=2*cos*cos*(dy-dx*Math.tan(rad)); if(denom!==0) exact=(Math.sqrt(Math.abs((gravity*dx*dx)/denom))/0.14)-(wind*120); }
+          fire('P2',p2,p2.skin,1,Math.max(10,Math.min(100,exact+(Math.random()-0.5)*Math.max(0,(10-currentStage)*1.8))));
+        },400);
+      }
+    },20);
+  }
+  function switchTurn(){
+    if(isOver) return;
+    poisonClouds.forEach(pc=>{ [p1,p2].forEach(p=>{ if(Math.hypot(p.x-pc.x,p.y-pc.y)<=pc.radius) p.hp=Math.max(0,p.hp-pc.damage); }); });
+    document.getElementById('fP1Hp').innerText=p1.hp+'/'+p1.maxHp; document.getElementById('fP2Hp').innerText=p2.hp+'/'+p2.maxHp;
+    if(p1.hp<=0||p2.hp<=0){ endGame(p2.hp<=0); return; } randomizeWind();
+    if(turn==='P1'){ turn='P2'; updateTurnUI(); startTurnTimer(); if(gameMode==='AI') setTimeout(executeEnemyTurn,600); } else { turn='P1'; updateTurnUI(); startTurnTimer(); }
+  }
+  function endGame(p1Win){
+    if(isOver) return; isOver=true; clearAllTimers();
+    document.getElementById('fHud').style.display='none'; document.getElementById('fPowerContainer').style.display='none'; document.getElementById('fTurnIndicator').style.display='none'; document.getElementById('fOver').style.display='flex';
+    const res=document.getElementById('fResult'), sub=document.getElementById('fSubText'), nextBtn=document.getElementById('fNextBtn');
+    if(p1Win){ if(gameMode==='AI'){ if(currentStage>=10){ res.innerText='ALL CLEAR!'; sub.innerText='10단계 보스를 모두 물리쳤습니다!'; nextBtn.innerText='처음부터'; } else { res.innerText='STAGE '+currentStage+' 승리!'; sub.innerText='다음 단계로 진출합니다.'; nextBtn.innerText='STAGE '+(currentStage+1); } } else { res.innerText='1P 승리!'; sub.innerText='상대 탱크를 파괴했습니다.'; nextBtn.innerText='다시 하기'; } }
+    else { res.innerText=gameMode==='AI'?('STAGE '+currentStage+' 패배'):'2P 승리!'; sub.innerText='탱크가 파괴되었거나 시간 초과입니다.'; nextBtn.innerText='재도전'; }
+  }
+  function updateTankPhysics(tank){ if(isOver) return; const gy=getTerrainY(tank.x); if(tank.y<gy){ tank.vy+=0.3; tank.y+=tank.vy; if(tank.y>=gy){ tank.y=gy; tank.vy=0; } } else { tank.y=gy; tank.vy=0; } if(tank.y>=490){ tank.hp=0; endGame(tank!==p1); } }
+  function drawFortressBackground(){
+    if(currentMap.bgType==='city'){ [{x:30,w:50,h:260},{x:90,w:40,h:200},{x:170,w:75,h:320},{x:260,w:55,h:230},{x:360,w:80,h:350},{x:460,w:60,h:270},{x:560,w:75,h:330},{x:650,w:45,h:210},{x:710,w:60,h:250}].forEach(b=>{ ctx.fillStyle='#080c1e'; ctx.fillRect(b.x,500-b.h,b.w,b.h); ctx.fillStyle='#121d45'; ctx.fillRect(b.x+4,500-b.h+4,b.w-8,b.h-8); }); }
+    else if(currentMap.bgType==='sphinx'){ ctx.fillStyle='#4a1226'; ctx.beginPath(); ctx.moveTo(100,500); ctx.lineTo(400,160); ctx.lineTo(700,500); ctx.fill(); ctx.fillStyle='rgba(255,215,0,'+(Math.sin(animFrame*0.08)*0.3+0.7)+')'; ctx.beginPath(); ctx.arc(400,240,18,0,Math.PI*2); ctx.fill(); }
+    else { ctx.fillStyle='#0a2336'; ctx.beginPath(); ctx.moveTo(0,500); ctx.lineTo(100,280); ctx.lineTo(250,500); ctx.lineTo(380,250); ctx.lineTo(550,500); ctx.lineTo(680,290); ctx.lineTo(800,500); ctx.fill(); }
+  }
+  function drawTrajectory(shooter){
+    if(!isCharging||currentPower<=2) return;
+    const rad=-shooter.angle*Math.PI/180, spd=currentPower*0.14; let x=shooter.x+Math.cos(rad)*28,y=shooter.y-12+Math.sin(rad)*28,vx=Math.cos(rad)*spd,vy=Math.sin(rad)*spd;
+    ctx.save();
+    for(let step=0;step<90;step++){ vx+=wind; x+=vx; vy+=0.15; y+=vy; if(x<0||x>800||y>500) break; if(step%2===0){ ctx.fillStyle='rgba(255,235,59,'+Math.max(0.2,1-step*0.02)+')'; ctx.beginPath(); ctx.arc(x,y,Math.max(1.5,4-step*0.03),0,Math.PI*2); ctx.fill(); } if(y>=getTerrainY(x)){ ctx.strokeStyle='#ff5252'; ctx.beginPath(); ctx.arc(x,y,8,0,Math.PI*2); ctx.stroke(); break; } }
+    ctx.restore();
+  }
+  function drawHighQualityBullet(b){ ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(Math.atan2(b.vy,b.vx)); ctx.fillStyle=b.skin.id==='poseidon'?'#00e5ff':b.skin.id==='duke'?'#aeea00':b.skin.id==='supertank'?'#ff1744':'#ff5722'; ctx.beginPath(); ctx.arc(0,0,6,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+  function drawPixelCloud(x,y,scale){ ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale); ctx.fillStyle='rgba(255,255,255,.15)'; ctx.beginPath(); ctx.arc(0,0,18,0,Math.PI*2); ctx.arc(15,-8,14,0,Math.PI*2); ctx.arc(32,0,16,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+  function drawPixelTank(p,isP1){
+    ctx.save(); ctx.translate(Math.round(p.x),Math.round(p.y)); if(!isP1) ctx.scale(-1,1);
+    const rad=-p.angle*Math.PI/180*(isP1?1:-1);
+    const moving=(isP1&&turn==='P1')||(!isP1&&turn==='P2'&&gameMode==='PVP') ? !!(keys.ArrowLeft||keys.ArrowRight||keys.KeyA||keys.KeyD) : isAiMoving;
+    const sh=moving?(Math.floor(animFrame/3)%2):0;
+    ctx.fillStyle='#111'; ctx.fillRect(-18,-4,36,8); ctx.fillStyle='#787888'; ctx.fillRect(-13+sh,-2,8,4); ctx.fillRect(-1+sh,-2,8,4); ctx.fillRect(11+sh,-2,8,4);
+    ctx.save(); ctx.translate(0,-9); ctx.rotate(rad); ctx.fillStyle='#222'; ctx.fillRect(0,-4,22,8); ctx.fillStyle='#ff5722'; ctx.fillRect(16,-5,6,10); ctx.restore();
+    ctx.fillStyle='#37474f'; ctx.fillRect(-14,-14,28,11); ctx.fillStyle='#fff'; ctx.fillRect(4,-11,5,5); ctx.fillStyle='#000'; ctx.fillRect(6,-10,2,3); ctx.restore();
+  }
+  function gameLoop(){
+    animFrame++; ctx.clearRect(0,0,800,500);
+    const sky=ctx.createLinearGradient(0,0,0,500); sky.addColorStop(0,currentMap.sky[0]); sky.addColorStop(.3,currentMap.sky[1]); sky.addColorStop(.7,currentMap.sky[2]); sky.addColorStop(1,currentMap.sky[3]);
+    ctx.fillStyle=sky; ctx.fillRect(0,0,800,500);
+    stars.forEach(s=>{ ctx.fillStyle='rgba(255,255,255,'+(s.alpha*(.5+Math.sin(animFrame*.05+s.x)*.3))+')'; ctx.fillRect(s.x,s.y,s.size,s.size); });
+    clouds.forEach(c=>{ c.x+=c.speed; if(c.x>850)c.x=-100; drawPixelCloud(c.x,c.y,c.scale); });
+    drawFortressBackground(); ctx.drawImage(terrainCanvas,0,0);
+    if(document.getElementById('fLobby').style.display==='none'){
+      updateTankPhysics(p1); updateTankPhysics(p2);
+      if(!isOver&&bullets.length===0){
+        const tank=turn==='P1'?p1:(gameMode==='PVP'?p2:null);
+        if(tank){
+          if(keys.KeyA||keys.ArrowLeft){ tank.x=Math.max(20,tank.x-1.2); tank.y=getTerrainY(tank.x); startMoveSound(); }
+          else if(keys.KeyD||keys.ArrowRight){ tank.x=Math.min(780,tank.x+1.2); tank.y=getTerrainY(tank.x); startMoveSound(); }
+          else if(!isAiMoving) stopMoveSound();
+          if(keys.KeyW||keys.ArrowUp){ if(turn==='P1') p1.angle=Math.min(90,p1.angle+0.6); else p2.angle=Math.min(180,p2.angle+0.6); }
+          if(keys.KeyS||keys.ArrowDown){ if(turn==='P1') p1.angle=Math.max(0,p1.angle-0.6); else p2.angle=Math.max(90,p2.angle-0.6); }
+          document.getElementById('fAngle').innerText=String(Math.round(p1.angle)); document.getElementById('fP2Angle').innerText=String(Math.round(p2.angle));
+        }
+      }
+      if(isCharging){ currentPower+=powerDir*1.5; if(currentPower>=100){currentPower=100;powerDir=-1;} if(currentPower<=0){currentPower=0;powerDir=1;} document.getElementById('fPowerBar').style.width=currentPower+'%'; }
+      if(turn==='P1') drawTrajectory(p1); else if(gameMode==='PVP') drawTrajectory(p2);
+      drawPixelTank(p1,true); drawPixelTank(p2,false);
+      poisonClouds.forEach(pc=>{ pc.duration--; ctx.fillStyle='rgba(118,255,3,'+(pc.opacity*(pc.duration/180))+')'; ctx.beginPath(); ctx.arc(pc.x,pc.y,pc.radius,0,Math.PI*2); ctx.fill(); });
+      poisonClouds=poisonClouds.filter(pc=>pc.duration>0);
+      bullets.forEach(b=>{ if(!b.alive) return; b.vx+=wind; b.x+=b.vx; b.vy+=0.15; b.y+=b.vy; drawHighQualityBullet(b); if(b.y>=getTerrainY(b.x)||b.x<0||b.x>800||b.y>520){ b.alive=false; createExplosion(b.x,b.y,b.skin.cSize,b.skin); [p1,p2].forEach(p=>{ const dist=Math.hypot(p.x-b.x,p.y-b.y); if(dist<b.skin.cSize+12){ const dmg=Math.round(b.skin.baseDmg*b.dmgMult*(1-dist/(b.skin.cSize+25))); p.hp=Math.max(0,p.hp-Math.max(5,dmg)); document.getElementById('fP1Hp').innerText=p1.hp+'/'+p1.maxHp; document.getElementById('fP2Hp').innerText=p2.hp+'/'+p2.maxHp; } }); } });
+      explosions.forEach(ex=>{ ex.radius+=2; ctx.fillStyle='rgba(255,87,34,.7)'; ctx.beginPath(); ctx.arc(ex.x,ex.y,ex.radius,0,Math.PI*2); ctx.fill(); });
+      explosions=explosions.filter(ex=>ex.radius<ex.maxRadius);
+      particles.forEach(pt=>{ pt.x+=pt.vx; pt.y+=pt.vy; pt.life-=pt.decay; ctx.fillStyle=pt.color; ctx.fillRect(pt.x,pt.y,pt.size,pt.size); });
+      particles=particles.filter(pt=>pt.life>0);
+    }
+    requestAnimationFrame(gameLoop);
+  }
+  document.addEventListener('touchmove', e=>{ if(e.target.closest('#touch-hud,#fortress-game,#intro,#rotateLock')) e.preventDefault(); }, {passive:false});
+  window.addEventListener('resize', applyLandscapeView);
+  window.addEventListener('orientationchange', function(){ setTimeout(applyLandscapeView, 250); });
+  applyLandscapeView();
+  requestAnimationFrame(gameLoop);
+})();
+</script>
+</body>
+</html>
