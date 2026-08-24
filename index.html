@@ -57,9 +57,9 @@
     .pad button,#fireBtn { pointer-events:auto; border:2px solid rgba(255,255,255,.28); background:rgba(12,16,32,.28); color:rgba(255,255,255,.92); border-radius:14px; font-weight:900; font-size:20px; backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); }
     .pad button.held,#fireBtn.held { background:rgba(0,229,255,.42); color:#fff; border-color:rgba(255,255,255,.7); }
     #fireWrap { pointer-events:auto; position:absolute; right:max(10px,env(safe-area-inset-right)); bottom:max(10px,env(safe-area-inset-bottom)); width:118px; display:flex; flex-direction:column; gap:6px; }
-    #fireBtn { height:112px; font-size:22px; background:linear-gradient(to bottom,rgba(255,152,0,.38),rgba(230,81,0,.34)); border-color:rgba(255,255,255,.4); }
-    #fireBtn.held { background:linear-gradient(rgba(255,235,59,.5),rgba(255,87,34,.45)); border-color:#fff; }
-    #fireHelp { text-align:center; font-size:10px; color:rgba(201,210,239,.75); text-shadow:0 1px 2px #000; pointer-events:none; }
+    #fireBtn { height:112px; font-size:22px; background:linear-gradient(to bottom,rgba(255,152,0,.18),rgba(230,81,0,.14)); border-color:rgba(255,255,255,.28); color:rgba(255,255,255,.88); }
+    #fireBtn.held { background:linear-gradient(rgba(255,235,59,.32),rgba(255,87,34,.28)); border-color:rgba(255,255,255,.55); color:#fff; }
+    #fireHelp { text-align:center; font-size:10px; color:rgba(201,210,239,.55); text-shadow:0 1px 2px #000; pointer-events:none; }
     #installTip { display:none; position:absolute; left:50%; bottom:12px; transform:translateX(-50%); z-index:70; background:rgba(8,12,28,.94); border:1px solid #00e5ff; border-radius:12px; padding:10px 14px; font-size:12px; width:min(420px,92%); text-align:center; }
     #installTip.show { display:block; }
     #installTip b { color:#ffeb3b; }
@@ -157,10 +157,77 @@
     .pad button { font-size:24px !important; background:rgba(12,16,32,.28) !important; }
     .pad button.held { background:rgba(0,229,255,.42) !important; }
     #fireWrap { width:128px !important; }
-    #fireBtn { height:120px !important; font-size:24px !important; background:linear-gradient(to bottom,rgba(255,152,0,.38),rgba(230,81,0,.34)) !important; }
-    #fireBtn.held { background:linear-gradient(rgba(255,235,59,.5),rgba(255,87,34,.45)) !important; }
+    #fireBtn { height:120px !important; font-size:24px !important; background:linear-gradient(to bottom,rgba(255,152,0,.18),rgba(230,81,0,.14)) !important; }
+    #fireBtn.held { background:linear-gradient(rgba(255,235,59,.32),rgba(255,87,34,.28)) !important; }
     #fireHelp { pointer-events:none; }
     #fPause .pause-actions { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:12px; }
+
+    #fTankSelect {
+      display:none !important; overflow-x:hidden; overflow-y:auto;
+      justify-content:flex-start !important; align-items:stretch !important;
+      padding:8px 10px 14px; z-index:35 !important;
+      background:rgba(8,10,20,.98) !important;
+    }
+    #fTankSelect.show { display:flex !important; flex-direction:column !important; }
+    .tank-select-title { color:#ffeb3b; margin:4px 0 6px; font-size:20px; text-shadow:2px 2px #000; text-align:center; flex:0 0 auto; }
+    .tank-select-sub { color:#9adfff; font-size:12px; margin-bottom:8px; text-align:center; flex:0 0 auto; }
+    .tank-grid {
+      display:grid !important;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:8px; width:100%; max-width:640px; margin:0 auto 10px;
+      flex:0 0 auto; min-height:120px;
+    }
+    .tank-card {
+      background:#14182a; border:2px solid #3d4668; border-radius:10px; padding:8px 4px 6px;
+      cursor:pointer; color:#ddd; font-size:11px; font-weight:800; min-height:78px;
+      display:flex !important; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+      -webkit-user-select:none; user-select:none; width:100%;
+      pointer-events:auto;
+    }
+    .tank-card canvas { width:56px; height:36px; image-rendering:pixelated; display:block; }
+    .tank-card .tn { color:#fff; font-size:11px; line-height:1.2; text-align:center; }
+    .tank-card.selected { border-color:#00e5ff; background:#1a3040; box-shadow:0 0 0 2px rgba(0,229,255,.35); }
+    .tank-card.rare { border-color:#ff1744; }
+    .tank-card.rare .tn { color:#ff8a80; }
+    .tank-select-actions { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:6px; flex:0 0 auto; }
+    .tank-select-actions .btn { min-height:42px; font-size:15px; padding:10px 18px; }
+    .btn-random { background:linear-gradient(#7c4dff,#4527a0); box-shadow:0 4px 0 #2a1760; }
+    .btn-back { background:linear-gradient(#555,#222); box-shadow:0 4px 0 #111; }
+    body.tank-picking .top-actions { display:none !important; }
+    body.tank-picking #fHud, body.tank-picking #fPowerLabel, body.tank-picking #fPowerContainer, body.tank-picking #fTurnIndicator { display:none !important; }
+    #tankPopup {
+      display:none; position:absolute; inset:0; z-index:60 !important;
+      background:rgba(0,0,0,.78); align-items:center; justify-content:center; padding:12px;
+      pointer-events:auto;
+    }
+    #tankPopup.show { display:flex !important; }
+    .tank-popup-box {
+      width:min(520px,96%); background:#0e1220; border:2px solid #00e5ff; border-radius:14px;
+      padding:14px 14px 12px; display:flex; flex-direction:column; gap:10px;
+      box-shadow:0 12px 40px rgba(0,0,0,.6);
+    }
+    .tank-popup-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .tank-popup-head h3 { margin:0; color:#ffeb3b; font-size:18px; }
+    .tank-popup-body { display:flex; gap:14px; align-items:center; }
+    #tankPreview { width:180px; height:140px; background:#070b16; border:2px solid #445; border-radius:10px; image-rendering:pixelated; flex:0 0 auto; }
+    .tank-stats { flex:1; display:flex; flex-direction:column; gap:8px; min-width:0; }
+    .stat-row { display:flex; flex-direction:column; gap:3px; }
+    .stat-label { display:flex; justify-content:space-between; font-size:11px; color:#9adfff; font-weight:700; }
+    .stat-label span.val { color:#ffeb3b; }
+    .stat-bar { height:12px; background:#1a1f33; border:1px solid #445; border-radius:6px; overflow:hidden; }
+    .stat-fill { height:100%; width:0; border-radius:6px; transition:width .25s ease; }
+    .stat-fill.dmg { background:linear-gradient(90deg,#ff5722,#ffeb3b); }
+    .stat-fill.shots { background:linear-gradient(90deg,#00bcd4,#00e5ff); }
+    .stat-fill.crush { background:linear-gradient(90deg,#8bc34a,#cddc39); }
+    .stat-fill.poison { background:linear-gradient(90deg,#76ff03,#aeea00); }
+    .tank-popup-desc { color:#aaa; font-size:12px; line-height:1.4; margin:0; }
+    .tank-popup-actions { display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
+    .tank-popup-actions .btn { min-height:40px; font-size:14px; padding:8px 16px; }
+    @media (max-width:700px) {
+      .tank-grid { grid-template-columns:repeat(3,1fr); }
+      .tank-popup-body { flex-direction:column; }
+      #tankPreview { width:140px; height:100px; }
+    }
   </style>
 </head>
 <body>
@@ -186,6 +253,37 @@
         </div>
         <div class="tank-info-box">왼쪽 패드로 이동/각도 · 오른쪽 FIRE를 길게 눌러 충전 후 손을 떼면 발사</div>
         <button class="btn" id="fStartBtn" type="button">게임 시작</button>
+      </div>
+      <div id="fTankSelect" class="screen">
+        <div class="tank-select-title" id="tankSelectTitle">1P 탱크 선택</div>
+        <div class="tank-select-sub">탱크를 고르면 바로 시작합니다 · 슈퍼탱크는 랜덤 5%만</div>
+        <div class="tank-grid" id="tankGrid"></div>
+        <div class="tank-select-actions">
+          <button class="btn btn-back" id="tankBackBtn" type="button">뒤로</button>
+          <button class="btn btn-random" id="tankRandomBtn" type="button">🎲 랜덤</button>
+          <button class="btn" id="tankConfirmBtn" type="button">선택 탱크로 시작</button>
+        </div>
+      </div>
+      <div id="tankPopup">
+        <div class="tank-popup-box">
+          <div class="tank-popup-head">
+            <h3 id="tankPopupName">탱크</h3>
+            <button class="btn btn-back" id="tankPopupClose" type="button" style="min-height:34px;padding:6px 12px;font-size:13px;">닫기</button>
+          </div>
+          <div class="tank-popup-body">
+            <canvas id="tankPreview" width="180" height="140"></canvas>
+            <div class="tank-stats">
+              <div class="stat-row"><div class="stat-label"><span>공격력</span><span class="val" id="statDmgVal">0</span></div><div class="stat-bar"><div class="stat-fill dmg" id="statDmg"></div></div></div>
+              <div class="stat-row"><div class="stat-label"><span>연사(발수)</span><span class="val" id="statShotsVal">0</span></div><div class="stat-bar"><div class="stat-fill shots" id="statShots"></div></div></div>
+              <div class="stat-row"><div class="stat-label"><span>지형 파괴</span><span class="val" id="statCrushVal">0</span></div><div class="stat-bar"><div class="stat-fill crush" id="statCrush"></div></div></div>
+              <div class="stat-row"><div class="stat-label"><span>독 데미지</span><span class="val" id="statPoisonVal">0</span></div><div class="stat-bar"><div class="stat-fill poison" id="statPoison"></div></div></div>
+            </div>
+          </div>
+          <p class="tank-popup-desc" id="tankPopupDesc"></p>
+          <div class="tank-popup-actions">
+            <button class="btn" id="tankPopupPick" type="button">이 탱크 선택</button>
+          </div>
+        </div>
       </div>
       <div id="fOver" class="screen" style="display:none;">
         <h1 id="fResult" style="color:#ffeb3b;margin:0 0 8px;">VICTORY!</h1>
@@ -469,7 +567,7 @@
   function stopMoveSound(){ if(isMovingSound&&moveGain){ moveGain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.05); setTimeout(()=>{ if(moveOsc){try{moveOsc.stop();}catch(e){}} isMovingSound=false; },50); } }
   function playShootSound(){ ensureAudio(); if(!audioCtx) return; const osc=audioCtx.createOscillator(),gain=audioCtx.createGain(); osc.type='square'; osc.frequency.setValueAtTime(320,audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(40,audioCtx.currentTime+0.2); gain.gain.setValueAtTime(0.18,audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.2); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime+0.2); }
   function playExplodeSound(){ ensureAudio(); if(!audioCtx) return; const n=audioCtx.sampleRate*0.3,buf=audioCtx.createBuffer(1,n,audioCtx.sampleRate),data=buf.getChannelData(0); for(let i=0;i<n;i++) data[i]=Math.random()*2-1; const src=audioCtx.createBufferSource(); src.buffer=buf; const gain=audioCtx.createGain(); gain.gain.setValueAtTime(0.28,audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.3); src.connect(gain); gain.connect(audioCtx.destination); src.start(); }
-  function canControlNow(){ if(isPaused||isOver||bullets.length>0) return false; if(document.getElementById('fLobby').style.display!=='none') return false; if(document.getElementById('fOver').style.display==='flex') return false; if(document.getElementById('fPause').style.display==='flex') return false; return turn==='P1' || (turn==='P2'&&gameMode==='PVP'); }
+  function canControlNow(){ if(isPaused||isOver||bullets.length>0) return false; if(document.getElementById('fLobby').style.display!=='none') return false; if(document.getElementById('fTankSelect').classList.contains('show')) return false; if(document.getElementById('fOver').style.display==='flex') return false; if(document.getElementById('fPause').style.display==='flex') return false; return turn==='P1' || (turn==='P2'&&gameMode==='PVP'); }
   function beginCharge(){ if(canControlNow()&&!isCharging){ isCharging=true; currentPower=0; powerDir=1.2; } }
   function releaseCharge(){ if(!isCharging) return; isCharging=false; fire(turn,turn==='P1'?p1:p2,(turn==='P1'?p1:p2).skin,1,currentPower); currentPower=0; document.getElementById('fPowerBar').style.width='0%'; }
   window.addEventListener('keydown',e=>{ ensureAudio(); startBgm(); if(e.code==='Space'){ e.preventDefault(); beginCharge(); } keys[e.code]=true; });
@@ -483,10 +581,504 @@
   function updateFuelUI(){ document.getElementById('fP1Fuel').innerText=String(Math.round(p1.fuel)); document.getElementById('fP2Fuel').innerText=String(Math.round(p2.fuel)); }
   function refillFuel(){ p1.fuel=p1.maxFuel; p2.fuel=p2.maxFuel; updateFuelUI(); }
   function startTurnTimer(){ if(turnTimerInterval) clearInterval(turnTimerInterval); turnTimeLeft=10; document.getElementById('fTimerBadge').innerText='🕒 '+turnTimeLeft+'초'; turnTimerInterval=setInterval(()=>{ if(isPaused||isOver||bullets.length>0) return; turnTimeLeft--; document.getElementById('fTimerBadge').innerText='🕒 '+turnTimeLeft+'초'; if(turnTimeLeft<=0){ clearInterval(turnTimerInterval); isCharging=false; currentPower=0; document.getElementById('fPowerBar').style.width='0%'; document.getElementById('fPowerLabel').textContent='파워 0%'; fireBtn.classList.remove('held'); switchTurn(); } },1000); }
-  function getRandomTank(){ if(Math.random()<0.05) return SKINS.find(s=>s.id==='supertank'); const f=SKINS.filter(s=>s.id!=='supertank'); return f[Math.floor(Math.random()*f.length)]; }
+  let selectedP1Skin=null, selectedP2Skin=null, tankPickPhase='P1', pendingSkin=null;
+  let tankUiAnimId=null, tankUiFrame=0, tankUiPreviewSkin=null;
+  function stopTankUiAnim(){ if(tankUiAnimId){ cancelAnimationFrame(tankUiAnimId); tankUiAnimId=null; } }
+  function startTankUiAnim(){
+    stopTankUiAnim();
+    function tick(){
+      tankUiFrame++;
+      // animate grid cards
+      const grid=document.getElementById('tankGrid');
+      if(grid){
+        const cards=grid.querySelectorAll('.tank-card canvas');
+        cards.forEach(function(c){
+          const id=c.parentElement.getAttribute('data-id');
+          if(!id) return;
+          const skin=SKINS.find(function(s){return s.id===id;});
+          if(skin) drawTankPreview(c, skin, 1.15, tankUiFrame);
+        });
+      }
+      // animate popup
+      if(document.getElementById('tankPopup').classList.contains('show') && tankUiPreviewSkin){
+        const pv=document.getElementById('tankPreview');
+        if(pv) drawTankPreview(pv, tankUiPreviewSkin, 3.0, tankUiFrame);
+      }
+      if(document.getElementById('fTankSelect').classList.contains('show') || document.getElementById('tankPopup').classList.contains('show')){
+        tankUiAnimId=requestAnimationFrame(tick);
+      } else {
+        tankUiAnimId=null;
+      }
+    }
+    tankUiAnimId=requestAnimationFrame(tick);
+  }
+  function getRandomTank(allowSuper){
+    if(allowSuper!==false && Math.random()<0.05) return SKINS.find(s=>s.id==='supertank');
+    const f=SKINS.filter(s=>s.id!=='supertank');
+    return f[Math.floor(Math.random()*f.length)];
+  }
+  function skinColor(skin){
+    if(!skin) return '#ff5722';
+    if(skin.id==='supertank') return '#ff1744';
+    if(skin.id==='poseidon') return '#00e5ff';
+    if(skin.id==='duke') return '#aeea00';
+    if(skin.id==='crossbow') return '#76ff03';
+    if(skin.id==='catapult') return '#ff9800';
+    if(skin.id==='cannon') return '#ff5722';
+    if(skin.id==='multi') return '#e040fb';
+    if(skin.id==='missile') return '#ffab40';
+    if(skin.id==='carrot') return '#ffcc80';
+    if(skin.id==='secwind') return '#80cbc4';
+    return '#ff5722';
+  }
+  function drawTankPreview(c, skin, scale, frame){
+    const cx=c.getContext('2d'); const w=c.width, hh=c.height;
+    const f=frame||0;
+    const id=(skin&&skin.id)||'cannon';
+    cx.clearRect(0,0,w,hh);
+    // sky
+    const g=cx.createLinearGradient(0,0,0,hh);
+    g.addColorStop(0,'#0a1530'); g.addColorStop(0.55,'#152548'); g.addColorStop(1,'#1c2e20');
+    cx.fillStyle=g; cx.fillRect(0,0,w,hh);
+    for(let i=0;i<14;i++){
+      const a=0.35+0.45*((Math.sin(f*0.08+i*1.7)+1)/2);
+      cx.fillStyle='rgba(255,255,255,'+a+')';
+      cx.fillRect((i*37+10)%w, (i*19+8)%(hh*0.55), 1.5, 1.5);
+    }
+    // per-tank ambient FX
+    if(id==='poseidon'){
+      for(let i=0;i<5;i++){
+        const bx=(i*29+f*0.7)%w, by=hh*0.35+(Math.sin(f*0.1+i)*8);
+        cx.fillStyle='rgba(0,229,255,'+(0.2+0.2*Math.sin(f*0.15+i))+')';
+        cx.fillRect(bx, by, 2, 6);
+      }
+    } else if(id==='supertank'){
+      cx.fillStyle='rgba(255,235,59,'+(0.15+0.1*Math.sin(f*0.2))+')';
+      cx.beginPath(); cx.arc(w*0.5, hh*0.25, 18+Math.sin(f*0.1)*3, 0, Math.PI*2); cx.fill();
+    } else if(id==='duke'||id==='crossbow'){
+      cx.fillStyle='rgba(118,255,3,'+(0.12+0.08*Math.sin(f*0.12))+')';
+      cx.beginPath(); cx.arc(w*0.7, hh*0.3, 12, 0, Math.PI*2); cx.fill();
+    } else if(id==='multi'){
+      cx.strokeStyle='rgba(224,64,251,0.35)'; cx.lineWidth=1;
+      for(let i=0;i<3;i++){ cx.beginPath(); cx.arc(w*0.5, hh*0.4, 10+i*6+(f%20)*0.3, 0, Math.PI*2); cx.stroke(); }
+    }
+    const cxCloud=((f*0.35)%(w+40))-20;
+    cx.fillStyle='rgba(255,255,255,0.08)';
+    cx.beginPath(); cx.arc(cxCloud, hh*0.22, 10,0,Math.PI*2); cx.arc(cxCloud+12, hh*0.2, 8,0,Math.PI*2); cx.arc(cxCloud+22, hh*0.22, 9,0,Math.PI*2); cx.fill();
+    const gy=hh*0.78;
+    cx.fillStyle='#1a3d12'; cx.fillRect(0,gy,w,hh-gy);
+    cx.strokeStyle='#7be026'; cx.lineWidth=3; cx.beginPath();
+    cx.moveTo(0,gy); for(let x=0;x<=w;x+=8) cx.lineTo(x, gy+Math.sin(x*0.08+f*0.05)*2); cx.stroke();
+
+    // unique motion profile per tank
+    let bob=0, sh=0, bw=0, hopX=0;
+    if(id==='cannon'){ bob=Math.sin(f*0.08)*0.8; sh=Math.floor(f/8)%2; bw=Math.sin(f*0.05)*0.03; }
+    else if(id==='carrot'){ bob=Math.abs(Math.sin(f*0.14))*2.2; sh=Math.floor(f/4)%2; bw=Math.sin(f*0.1)*0.05; }
+    else if(id==='missile'){ bob=Math.sin(f*0.2)*1.5; hopX=Math.sin(f*0.2)*3; sh=Math.floor(f/3)%2; bw=0.02; }
+    else if(id==='multi'){ bob=Math.sin(f*0.18)*1.2; sh=Math.floor(f/3)%2; bw=Math.sin(f*0.25)*0.12; }
+    else if(id==='poseidon'){ bob=Math.sin(f*0.1)*2.5; sh=0; bw=Math.sin(f*0.08)*0.08; }
+    else if(id==='secwind'){ bob=Math.sin(f*0.22)*1.8; hopX=Math.sin(f*0.11)*4; sh=Math.floor(f/2)%2; bw=Math.sin(f*0.15)*0.1; }
+    else if(id==='crossbow'){ bob=Math.sin(f*0.09)*0.6; sh=Math.floor(f/6)%2; bw=Math.sin(f*0.3)*0.15; }
+    else if(id==='supertank'){ bob=Math.sin(f*0.16)*2; sh=Math.floor(f/3)%2; bw=Math.sin(f*0.12)*0.06; }
+    else if(id==='duke'){ bob=Math.sin(f*0.07)*1; sh=Math.floor(f/5)%2; bw=Math.sin(f*0.09)*0.04; }
+    else if(id==='catapult'){ bob=Math.sin(f*0.06)*0.5; sh=0; bw=Math.sin(f*0.07)*0.35; }
+    else { bob=Math.sin(f*0.12)*1.2; sh=Math.floor(f/5)%2; bw=Math.sin(f*0.06)*0.04; }
+
+    drawDetailedTank(cx, w*0.5+hopX, gy-2+bob, skin, scale||2.8, false, sh, bw, f);
+  }
+  function drawDetailedTank(cx, x, y, skin, s, flip, sh, barrelWiggle, frame){
+    if(!skin) skin={id:'cannon'};
+    const id=skin.id||'cannon';
+    const bw=barrelWiggle||0;
+    const fr=frame||0;
+    const track=sh||0;
+    cx.save();
+    cx.translate(x, y);
+    if(flip) cx.scale(-1,1);
+    cx.scale(s, s);
+
+    let hull='#5c6bc0', dark='#283593', light='#9fa8da', accent='#ff5722', eye='#fff', pupil='#111', cheek=null;
+    if(id==='cannon'){ hull='#78909c'; dark='#37474f'; light='#b0bec5'; accent='#ff3d00'; }
+    else if(id==='carrot'){ hull='#ff8a65'; dark='#d84315'; light='#ffccbc'; accent='#ffd54f'; cheek='#ffab91'; }
+    else if(id==='missile'){ hull='#546e7a'; dark='#263238'; light='#90a4ae'; accent='#ffab40'; }
+    else if(id==='multi'){ hull='#ab47bc'; dark='#6a1b9a'; light='#e1bee7'; accent='#e040fb'; }
+    else if(id==='poseidon'){ hull='#26a69a'; dark='#00695c'; light='#80cbc4'; accent='#00e5ff'; }
+    else if(id==='secwind'){ hull='#4dd0e1'; dark='#00838f'; light='#b2ebf2'; accent='#00bcd4'; }
+    else if(id==='crossbow'){ hull='#9ccc65'; dark='#558b2f'; light='#dcedc8'; accent='#76ff03'; cheek='#c5e1a5'; }
+    else if(id==='supertank'){ hull='#ef5350'; dark='#b71c1c'; light='#ffcdd2'; accent='#ff1744'; eye='#ffeb3b'; }
+    else if(id==='duke'){ hull='#aed581'; dark='#689f38'; light='#f1f8e9'; accent='#aeea00'; }
+    else if(id==='catapult'){ hull='#a1887f'; dark='#5d4037'; light='#d7ccc8'; accent='#ff9800'; }
+
+    // shadow
+    cx.fillStyle='rgba(0,0,0,0.28)';
+    cx.beginPath(); cx.ellipse(0, 6, 24, 5, 0, 0, Math.PI*2); cx.fill();
+
+    // === UNIQUE BODY SHAPES ===
+    // tracks base
+    cx.fillStyle=dark;
+    if(id==='multi'){
+      // wheeled APC look
+      cx.fillRect(-24,0,48,8);
+      for(let i=-2;i<=2;i++){ cx.fillStyle='#222'; cx.beginPath(); cx.arc(i*10, 6, 5, 0, Math.PI*2); cx.fill(); cx.fillStyle=light; cx.beginPath(); cx.arc(i*10+track, 6, 2, 0, Math.PI*2); cx.fill(); }
+    } else if(id==='secwind'){
+      // hover - no tracks, glow ring
+      cx.fillStyle='rgba(0,188,212,'+(0.25+0.2*Math.sin(fr*0.2))+')';
+      cx.beginPath(); cx.ellipse(0, 5, 22, 4, 0, 0, Math.PI*2); cx.fill();
+    } else if(id==='poseidon'){
+      cx.fillStyle=dark; cx.fillRect(-22,0,44,7);
+      cx.fillStyle=accent; cx.globalAlpha=0.5; cx.fillRect(-20,2,40,3); cx.globalAlpha=1;
+    } else {
+      cx.fillStyle=dark; cx.fillRect(-24,-2,48,10);
+      cx.fillStyle='#222';
+      for(let i=-3;i<=3;i++) cx.fillRect(i*7-2+track, 0, 5, 6);
+      cx.fillStyle=light; cx.fillRect(-22,-1,10,3); cx.fillRect(12,-1,10,3);
+    }
+
+    // body
+    cx.fillStyle=hull;
+    if(id==='cannon'){
+      // stout cannon body + big barrel mount
+      cx.beginPath(); cx.ellipse(0,-12,20,14,0,0,Math.PI*2); cx.fill();
+      cx.fillStyle=dark; cx.fillRect(-12,-28,24,10);
+    } else if(id==='carrot'){
+      // tank-like angular
+      cx.beginPath();
+      cx.moveTo(-20,-6); cx.lineTo(-18,-24); cx.lineTo(16,-26); cx.lineTo(22,-8); cx.lineTo(18,0); cx.lineTo(-18,0);
+      cx.closePath(); cx.fill();
+      cx.fillStyle=dark; cx.fillRect(-8,-30,18,8);
+    } else if(id==='missile'){
+      // sleek pointed
+      cx.beginPath(); cx.ellipse(2,-14,18,12,0.1,0,Math.PI*2); cx.fill();
+      cx.fillStyle=dark; cx.beginPath(); cx.moveTo(18,-14); cx.lineTo(28,-10); cx.lineTo(18,-6); cx.fill();
+    } else if(id==='multi'){
+      cx.fillRect(-20,-22,40,20);
+      cx.fillStyle=dark; cx.fillRect(-16,-30,32,10);
+    } else if(id==='poseidon'){
+      cx.beginPath(); cx.ellipse(0,-14,22,15,0,0,Math.PI*2); cx.fill();
+      // shell ridges
+      cx.strokeStyle=light; cx.lineWidth=1.5;
+      cx.beginPath(); cx.arc(0,-14,16,-0.8,0.8); cx.stroke();
+      cx.beginPath(); cx.arc(0,-14,11,-0.8,0.8); cx.stroke();
+    } else if(id==='secwind'){
+      // octopus-ish round with tentacle hints
+      cx.beginPath(); cx.ellipse(0,-16,20,16,0,0,Math.PI*2); cx.fill();
+      cx.fillStyle=dark;
+      for(let i=0;i<4;i++){
+        const a=-0.6+i*0.4 + Math.sin(fr*0.15+i)*0.15;
+        cx.save(); cx.translate(-12+i*8, 0); cx.rotate(a);
+        cx.fillRect(-2,0,4,12+Math.sin(fr*0.2+i)*3); cx.restore();
+      }
+    } else if(id==='crossbow'){
+      cx.beginPath(); cx.ellipse(0,-13,18,13,0,0,Math.PI*2); cx.fill();
+      // bow arms
+      cx.strokeStyle=accent; cx.lineWidth=3;
+      cx.beginPath(); cx.moveTo(-22,-20); cx.quadraticCurveTo(-5,-32,8,-18); cx.stroke();
+      cx.beginPath(); cx.moveTo(22,-20); cx.quadraticCurveTo(5,-32,-2,-18); cx.stroke();
+    } else if(id==='supertank'){
+      cx.beginPath(); cx.ellipse(0,-15,23,17,0,0,Math.PI*2); cx.fill();
+      cx.fillStyle=dark; cx.fillRect(-14,-32,28,12);
+      // star glow
+      const pulse=0.5+0.5*Math.sin(fr*0.2);
+      cx.fillStyle='rgba(255,235,59,'+pulse+')';
+      cx.beginPath(); cx.moveTo(0,-42); cx.lineTo(4,-34); cx.lineTo(12,-34); cx.lineTo(6,-28); cx.lineTo(8,-20); cx.lineTo(0,-25); cx.lineTo(-8,-20); cx.lineTo(-6,-28); cx.lineTo(-12,-34); cx.lineTo(-4,-34); cx.closePath(); cx.fill();
+    } else if(id==='duke'){
+      cx.beginPath(); cx.ellipse(0,-13,19,14,0,0,Math.PI*2); cx.fill();
+      cx.fillStyle=dark; cx.fillRect(-10,-28,20,9);
+      // gas tanks on back
+      cx.fillStyle=accent; cx.fillRect(-22,-20,6,12); cx.fillRect(-22,-22,6,3);
+    } else if(id==='catapult'){
+      // boxy ancient
+      cx.fillRect(-18,-22,36,20);
+      cx.fillStyle=dark; cx.fillRect(-12,-30,24,8);
+      // arm pivot
+      cx.fillStyle=light; cx.beginPath(); cx.arc(8,-26,5,0,Math.PI*2); cx.fill();
+    } else {
+      cx.beginPath(); cx.ellipse(0,-14,22,16,0,0,Math.PI*2); cx.fill();
+    }
+
+    // face (on most)
+    if(id!=='catapult'){
+      cx.fillStyle=dark;
+      cx.beginPath(); cx.ellipse(4, -16, 12, 10, 0, 0, Math.PI*2); cx.fill();
+      // eyes - blink
+      const blink = (fr%90<6);
+      cx.fillStyle=eye;
+      if(!blink){
+        cx.beginPath(); cx.ellipse(-1, -18, 5, 5.5, 0, 0, Math.PI*2); cx.fill();
+        cx.beginPath(); cx.ellipse(10, -18, 5, 5.5, 0, 0, Math.PI*2); cx.fill();
+        const lookX = Math.sin(fr*0.05)*1.2;
+        cx.fillStyle=pupil;
+        cx.beginPath(); cx.ellipse(0+lookX, -17, 2.2, 2.8, 0, 0, Math.PI*2); cx.fill();
+        cx.beginPath(); cx.ellipse(11+lookX, -17, 2.2, 2.8, 0, 0, Math.PI*2); cx.fill();
+        cx.fillStyle='#fff'; cx.fillRect(-1.5+lookX, -19, 1.3, 1.3); cx.fillRect(9.5+lookX, -19, 1.3, 1.3);
+      } else {
+        cx.strokeStyle=eye; cx.lineWidth=2;
+        cx.beginPath(); cx.moveTo(-5,-18); cx.lineTo(3,-18); cx.stroke();
+        cx.beginPath(); cx.moveTo(6,-18); cx.lineTo(14,-18); cx.stroke();
+      }
+      if(cheek){ cx.fillStyle=cheek; cx.globalAlpha=0.75; cx.beginPath(); cx.ellipse(-7,-12,3,2,0,0,Math.PI*2); cx.fill(); cx.beginPath(); cx.ellipse(14,-12,3,2,0,0,Math.PI*2); cx.fill(); cx.globalAlpha=1; }
+      // expression per tank
+      cx.strokeStyle='#111'; cx.lineWidth=1.2;
+      cx.beginPath();
+      if(id==='supertank'){ cx.arc(5, -10, 5, 0.1, Math.PI-0.1); } // big grin
+      else if(id==='duke'||id==='crossbow'){ cx.moveTo(1,-10); cx.lineTo(9,-10); } // flat
+      else if(id==='missile'){ cx.arc(5, -9, 4, 0.3, Math.PI-0.3); }
+      else { cx.arc(5, -11, 4.5, 0.2, Math.PI-0.2); }
+      cx.stroke();
+    }
+
+    // barrel
+    cx.save();
+    cx.translate(id==='catapult'?8:16, id==='catapult'?-26:-15);
+    let ang = -0.45 + bw;
+    if(id==='catapult') ang = -0.9 + bw;
+    if(id==='crossbow') ang = -0.2 + bw;
+    if(id==='cannon') ang = -0.55 + bw;
+    if(id==='multi') ang = -0.35 + bw*0.5;
+    cx.rotate(ang);
+
+    if(id==='multi'){
+      for(let i=-1;i<=1;i++){
+        cx.fillStyle=dark; cx.fillRect(0, i*5-2, 22, 4);
+        cx.fillStyle=accent; cx.fillRect(20, i*5-3, 6, 6);
+        // muzzle flash anim
+        if(fr%30<4){ cx.fillStyle='rgba(255,235,59,0.8)'; cx.fillRect(26, i*5-2, 4, 4); }
+      }
+    } else if(id==='cannon'){
+      cx.fillStyle=dark; cx.fillRect(0, -5, 28, 10);
+      cx.fillStyle='#222'; cx.fillRect(24, -7, 8, 14);
+      cx.fillStyle=accent; cx.fillRect(28, -5, 4, 10);
+      if(fr%40<5){ cx.fillStyle='rgba(255,100,0,0.6)'; cx.beginPath(); cx.arc(34,0,6,0,Math.PI*2); cx.fill(); }
+    } else if(id==='catapult'){
+      cx.fillStyle=dark; cx.fillRect(0, -3, 18, 6);
+      cx.strokeStyle=dark; cx.lineWidth=3;
+      cx.beginPath(); cx.arc(20, 0, 9, -1.4, 1.0); cx.stroke();
+      cx.fillStyle=accent; cx.beginPath(); cx.arc(28, -4, 6, 0, Math.PI*2); cx.fill();
+      // swinging rock
+      cx.fillStyle='#666'; cx.beginPath(); cx.arc(28, -4, 3.5, 0, Math.PI*2); cx.fill();
+    } else if(id==='crossbow'){
+      cx.fillStyle=dark; cx.fillRect(0, -2, 18, 4);
+      cx.fillStyle=accent; cx.fillRect(16, -7, 4, 14);
+      cx.strokeStyle=accent; cx.lineWidth=2;
+      cx.beginPath(); cx.moveTo(8,-10); cx.lineTo(18,0); cx.lineTo(8,10); cx.stroke();
+      // arrow
+      cx.fillStyle='#fff'; cx.fillRect(18, -1, 10, 2);
+    } else if(id==='poseidon'){
+      cx.fillStyle=dark; cx.fillRect(0, -3, 22, 6);
+      cx.fillStyle=accent; cx.fillRect(18, -5, 8, 10);
+      cx.fillStyle='rgba(0,229,255,0.55)';
+      cx.fillRect(26, -2+(fr%10), 2, 5);
+      cx.fillRect(29, (fr%8), 2, 4);
+    } else if(id==='duke'){
+      cx.fillStyle=dark; cx.fillRect(0, -3, 20, 6);
+      cx.fillStyle=accent; cx.fillRect(17, -5, 7, 10);
+      // gas puff from barrel
+      cx.fillStyle='rgba(174,234,0,'+(0.3+0.2*Math.sin(fr*0.2))+')';
+      cx.beginPath(); cx.arc(28, 0, 5+Math.sin(fr*0.15)*2, 0, Math.PI*2); cx.fill();
+    } else if(id==='missile'){
+      cx.fillStyle=dark; cx.fillRect(0, -3, 24, 6);
+      cx.fillStyle=accent; cx.beginPath(); cx.moveTo(24,-4); cx.lineTo(32,0); cx.lineTo(24,4); cx.fill();
+      // flame
+      if(fr%20<10){ cx.fillStyle='#ff9800'; cx.beginPath(); cx.moveTo(0,0); cx.lineTo(-6,-3); cx.lineTo(-4,0); cx.lineTo(-6,3); cx.fill(); }
+    } else if(id==='secwind'){
+      cx.fillStyle=dark; cx.fillRect(0, -3, 20, 6);
+      cx.fillStyle=accent; cx.fillRect(17, -4, 6, 8);
+      // swirl
+      cx.strokeStyle=accent; cx.lineWidth=1.5; cx.globalAlpha=0.6;
+      cx.beginPath(); cx.arc(28, 0, 5+(fr%15)*0.3, fr*0.1, fr*0.1+2); cx.stroke();
+      cx.globalAlpha=1;
+    } else if(id==='carrot'){
+      cx.fillStyle=dark; cx.fillRect(0, -3.5, 22, 7);
+      cx.fillStyle=accent; cx.fillRect(19, -4.5, 7, 9);
+    } else {
+      cx.fillStyle=dark; cx.fillRect(0, -3.5, 22, 7);
+      cx.fillStyle=accent; cx.fillRect(19, -4.5, 7, 9);
+    }
+    cx.restore();
+
+    // exhaust / special aura
+    if(id==='supertank'){
+      cx.fillStyle='rgba(255,23,68,'+(0.2+0.15*Math.sin(fr*0.18))+')';
+      cx.beginPath(); cx.ellipse(0,-15,28,20,0,0,Math.PI*2); cx.fill();
+    } else if(id==='secwind'){
+      // already tentacles
+    } else if(fr){
+      const t=((fr%40)/40);
+      cx.fillStyle='rgba(200,200,200,'+(0.25*(1-t))+')';
+      cx.beginPath(); cx.arc(-22-t*6, -18-t*8, 3+t*3, 0, Math.PI*2); cx.fill();
+    }
+
+    cx.restore();
+  }
+  function tankDesc(skin){
+
+
+
+    if(!skin) return '';
+    const parts=[];
+    parts.push(skin.count+'연발'+(skin.count===1?' 단발':''));
+    parts.push('데미지 '+skin.baseDmg);
+    parts.push('파괴 '+skin.cSize);
+    if(skin.isPoison) parts.push('독 +'+skin.poisonDmg);
+    if(skin.id==='supertank') parts.push('희귀 5%');
+    return parts.join(' · ');
+  }
+  function openTankPopup(skin){
+    if(!skin) return;
+    pendingSkin=skin;
+    document.getElementById('tankPopupName').textContent=skin.name||skin.id;
+    document.getElementById('tankPopupDesc').textContent=tankDesc(skin);
+    const maxDmg=55, maxShots=9, maxCrush=40, maxPoison=10;
+    const dmg=skin.baseDmg||0, shots=skin.count||1, crush=skin.cSize||10, poison=skin.poisonDmg||0;
+    document.getElementById('statDmg').style.width=Math.min(100,dmg/maxDmg*100)+'%';
+    document.getElementById('statShots').style.width=Math.min(100,shots/maxShots*100)+'%';
+    document.getElementById('statCrush').style.width=Math.min(100,crush/maxCrush*100)+'%';
+    document.getElementById('statPoison').style.width=Math.min(100,poison/maxPoison*100)+'%';
+    document.getElementById('statDmgVal').textContent=String(dmg);
+    document.getElementById('statShotsVal').textContent=String(shots)+'발';
+    document.getElementById('statCrushVal').textContent=String(crush);
+    document.getElementById('statPoisonVal').textContent=poison?String(poison):'-';
+    const pv=document.getElementById('tankPreview');
+    pv.width=180; pv.height=140;
+    tankUiPreviewSkin=skin;
+    drawTankPreview(pv, skin, 3.0, tankUiFrame);
+    const pop=document.getElementById('tankPopup');
+    const pick=document.getElementById('tankPopupPick');
+    if(pick){
+      if(skin.id==='supertank'){ pick.style.display='none'; }
+      else { pick.style.display=''; pick.textContent='이 탱크로 시작'; }
+    }
+    pop.classList.add('show');
+    pop.style.display='flex';
+    startTankUiAnim();
+  }
+  function closeTankPopup(){ const pop=document.getElementById('tankPopup'); pop.classList.remove('show'); pop.style.display='none'; pendingSkin=null; tankUiPreviewSkin=null; }
+  function highlightSelected(){
+    const cur = tankPickPhase==='P1'?selectedP1Skin:selectedP2Skin;
+    document.querySelectorAll('.tank-card').forEach(card=>{
+      const id=card.getAttribute('data-id');
+      card.classList.toggle('selected', !!(cur && cur.id===id));
+    });
+  }
+  function buildTankGrid(){
+    const grid=document.getElementById('tankGrid');
+    if(!grid) return;
+    grid.innerHTML='';
+    try {
+      const list = SKINS.filter(function(s){ return s.id!=='supertank'; });
+      for(let i=0;i<list.length;i++){
+        (function(skin){
+          const card=document.createElement('button');
+          card.type='button';
+          card.className='tank-card';
+          card.setAttribute('data-id', skin.id);
+          const c=document.createElement('canvas');
+          c.width=56; c.height=36;
+          card.appendChild(c);
+          const lab=document.createElement('div');
+          lab.className='tn';
+          lab.textContent=(skin.name||skin.id).split(' ')[0];
+          card.appendChild(lab);
+          card.addEventListener('click', function(ev){
+            ev.preventDefault(); ev.stopPropagation();
+            if(skin.id==='supertank') return; // 직접 선택 불가
+            if(tankPickPhase==='P1') selectedP1Skin=skin; else selectedP2Skin=skin;
+            highlightSelected();
+            // 선택 즉시 진행
+            confirmTankAndStart();
+          });
+          grid.appendChild(card);
+          try { drawTankPreview(c, skin, 1.15); } catch(err) {}
+        })(list[i]);
+      }
+      const rare=document.createElement('button');
+      rare.type='button';
+      rare.className='tank-card rare';
+      rare.innerHTML='<div style="font-size:20px;">⭐</div><div class="tn">슈퍼탱크<br><span style="font-size:10px;font-weight:700;">랜덤 5%</span></div>';
+      rare.addEventListener('click', function(ev){
+        ev.preventDefault();
+        // 미리보기만 — 선택/시작 불가
+        openTankPopup(SKINS.find(function(s){return s.id==='supertank';}));
+        const pick=document.getElementById('tankPopupPick');
+        if(pick){ pick.style.display='none'; }
+        const desc=document.getElementById('tankPopupDesc');
+        if(desc) desc.textContent='랜덤 선택 시에만 5% 확률로 등장합니다. 직접 선택할 수 없습니다.';
+      });
+      grid.appendChild(rare);
+      if(!grid.children.length){
+        grid.innerHTML='<div style="grid-column:1/-1;color:#ffeb3b;text-align:center;padding:12px;">탱크 목록을 불러오지 못했습니다</div>';
+      }
+    } catch(e) {
+      grid.innerHTML='<div style="grid-column:1/-1;color:#ff5252;text-align:center;padding:12px;">오류: '+(e&&e.message?e.message:e)+'</div>';
+    }
+    highlightSelected();
+  }
+  function showTankSelect(phase){
+    tankPickPhase=phase||'P1';
+    document.getElementById('fLobby').style.display='none';
+    document.getElementById('fHud').style.display='none';
+    document.getElementById('fPowerContainer').style.display='none';
+    document.getElementById('fPowerLabel').classList.remove('show');
+    document.getElementById('fTurnIndicator').style.display='none';
+    document.getElementById('fOver').style.display='none';
+    document.getElementById('fPause').style.display='none';
+    document.body.classList.add('tank-picking');
+    document.querySelector('.top-actions').classList.add('lobby-only-music');
+    const sel=document.getElementById('fTankSelect');
+    sel.classList.add('show');
+    sel.style.display='flex';
+    document.getElementById('tankSelectTitle').textContent = tankPickPhase==='P1'?'1P 탱크 선택':'2P 탱크 선택';
+    if(tankPickPhase==='P1' && !selectedP1Skin) selectedP1Skin=SKINS.find(function(s){return s.id==='cannon';})||SKINS[0];
+    if(tankPickPhase==='P2' && !selectedP2Skin) selectedP2Skin=SKINS.find(function(s){return s.id==='cannon';})||SKINS[0];
+    buildTankGrid();
+    closeTankPopup();
+    startTankUiAnim();
+  }
+  function hideTankSelect(){
+    const sel=document.getElementById('fTankSelect');
+    sel.classList.remove('show');
+    sel.style.display='none';
+    document.body.classList.remove('tank-picking');
+    tankUiPreviewSkin=null;
+    stopTankUiAnim();
+    closeTankPopup();
+  }
+  function applyPendingPick(){
+    if(!pendingSkin) return;
+    if(pendingSkin.id==='supertank'){ closeTankPopup(); return; } // 선택 불가
+    if(tankPickPhase==='P1') selectedP1Skin=pendingSkin;
+    else selectedP2Skin=pendingSkin;
+    closeTankPopup();
+    highlightSelected();
+    confirmTankAndStart();
+  }
+  function confirmTankAndStart(){
+    try {
+      if(tankPickPhase==='P1'){
+        if(!selectedP1Skin) selectedP1Skin=getRandomTank(true);
+        if(gameMode==='PVP'){
+          showTankSelect('P2');
+          return;
+        }
+        selectedP2Skin=getRandomTank(true);
+        hideTankSelect();
+        initStage(1);
+        return;
+      }
+      if(!selectedP2Skin) selectedP2Skin=getRandomTank(true);
+      hideTankSelect();
+      initStage(1);
+    } catch(e) {
+      alert('시작 오류: '+(e&&e.message?e.message:e));
+    }
+  }
   function initStage(stage){
     ensureAudio(); startBgm(); clearAllTimers(); resetTerrain(stage); currentStage=stage;
-    p1.skin=getRandomTank(); p2.skin=getRandomTank();
+    if(!selectedP1Skin) selectedP1Skin=getRandomTank(true);
+    if(!selectedP2Skin) selectedP2Skin=getRandomTank(true);
+    // 스테이지 진행 시 플레이어 탱크 유지, 적은 랜덤(AI)
+    p1.skin=selectedP1Skin;
+    p2.skin=(gameMode==='AI' && stage>1) ? getRandomTank(true) : selectedP2Skin;
     p1.maxHp=100; p1.hp=100; p1.x=120; p1.vy=0; p1.y=getTerrainY(p1.x); p1.angle=45; p1.fuel=100; p1.maxFuel=100;
     const aiHp=gameMode==='AI'?Math.round(100+(stage-1)*(350/9)):100;
     p2.maxHp=aiHp; p2.hp=aiHp; p2.x=680; p2.vy=0; p2.y=getTerrainY(p2.x); p2.angle=135; p2.fuel=100; p2.maxFuel=100;
@@ -500,14 +1092,35 @@
     const titles=['LV.1 초보','LV.2 훈련병','LV.3 일반병','LV.4 베테랑','LV.5 용병','LV.6 엘리트','LV.7 저격수','LV.8 챔피언','LV.9 마스터','LV.10 보스'];
     document.getElementById('fAiLevelTag').style.display=gameMode==='AI'?'block':'none';
     if(gameMode==='AI') document.getElementById('fAiLevelTag').innerText=titles[stage-1];
-    document.getElementById('fLobby').style.display='none'; document.getElementById('fOver').style.display='none'; document.getElementById('fPause').style.display='none';
+    document.getElementById('fLobby').style.display='none'; hideTankSelect(); document.getElementById('fOver').style.display='none'; document.getElementById('fPause').style.display='none';
     document.getElementById('fHud').style.display='flex'; document.getElementById('fPowerContainer').style.display='block'; document.getElementById('fPowerLabel').classList.add('show');
     document.getElementById('fPowerLabel').textContent='파워 0%';
     document.querySelector('.top-actions').classList.remove('lobby-only-music');
     updateFuelUI(); randomizeWind(); updateTurnUI(); startTurnTimer();
   }
   function updateTurnUI(){ if(isOver) return; const el=document.getElementById('fTurnIndicator'); el.style.display='block'; if(turn==='P1'){ el.innerText='1P 턴'; el.style.background='rgba(0,229,255,.9)'; } else if(gameMode==='AI'){ el.innerText='AI 계산 중...'; el.style.background='rgba(255,82,82,.9)'; } else { el.innerText='2P 턴'; el.style.background='rgba(255,235,59,.9)'; } }
-  document.getElementById('fStartBtn').onclick=function(){ lockLandscape(); initStage(1); document.getElementById('fsTip').classList.remove('show'); };
+  document.getElementById('fStartBtn').onclick=function(){
+    lockLandscape();
+    document.getElementById('fsTip').classList.remove('show');
+    selectedP1Skin=null; selectedP2Skin=null;
+    showTankSelect('P1');
+  };
+  document.getElementById('tankBackBtn').onclick=function(){
+    if(tankPickPhase==='P2'){ showTankSelect('P1'); return; }
+    hideTankSelect(); document.getElementById('fLobby').style.display='flex';
+  };
+  document.getElementById('tankRandomBtn').onclick=function(){
+    const skin=getRandomTank(true); // 슈퍼 5%
+    if(tankPickPhase==='P1') selectedP1Skin=skin; else selectedP2Skin=skin;
+    highlightSelected();
+    // 랜덤도 즉시 시작 (슈퍼 포함)
+    confirmTankAndStart();
+  };
+  document.getElementById('tankConfirmBtn').onclick=function(){ confirmTankAndStart(); };
+  document.getElementById('tankPopupClose').onclick=function(){ closeTankPopup(); };
+  document.getElementById('tankPopupPick').onclick=function(){ applyPendingPick(); };
+  document.getElementById('tankPopup').addEventListener('click', function(e){ if(e.target===this) closeTankPopup(); });
+
   document.getElementById('fNextBtn').onclick=()=>initStage((currentStage>=10&&gameMode==='AI')?1:currentStage+1);
   function goLobby(){
     clearAllTimers(); bullets=[]; explosions=[]; particles=[]; poisonClouds=[];
@@ -518,6 +1131,7 @@
     document.getElementById('fPowerContainer').style.display='none';
     document.getElementById('fPowerLabel').classList.remove('show');
     document.getElementById('fTurnIndicator').style.display='none';
+    hideTankSelect();
     document.getElementById('fLobby').style.display='flex';
     document.querySelector('.top-actions').classList.add('lobby-only-music');
     Object.keys(keys).forEach(k=>keys[k]=false);
@@ -610,13 +1224,80 @@
   function drawHighQualityBullet(b){ ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(Math.atan2(b.vy,b.vx)); ctx.fillStyle=b.skin.id==='poseidon'?'#00e5ff':b.skin.id==='duke'?'#aeea00':b.skin.id==='supertank'?'#ff1744':'#ff5722'; ctx.beginPath(); ctx.arc(0,0,6,0,Math.PI*2); ctx.fill(); ctx.restore(); }
   function drawPixelCloud(x,y,scale){ ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale); ctx.fillStyle='rgba(255,255,255,.15)'; ctx.beginPath(); ctx.arc(0,0,18,0,Math.PI*2); ctx.arc(15,-8,14,0,Math.PI*2); ctx.arc(32,0,16,0,Math.PI*2); ctx.fill(); ctx.restore(); }
   function drawPixelTank(p,isP1){
-    ctx.save(); ctx.translate(Math.round(p.x),Math.round(p.y)); if(!isP1) ctx.scale(-1,1);
-    const rad=-p.angle*Math.PI/180*(isP1?1:-1);
     const moving=(isP1&&turn==='P1')||(!isP1&&turn==='P2'&&gameMode==='PVP') ? !!(keys.ArrowLeft||keys.ArrowRight||keys.KeyA||keys.KeyD) : isAiMoving;
     const sh=moving?(Math.floor(animFrame/3)%2):0;
-    ctx.fillStyle='#111'; ctx.fillRect(-18,-4,36,8); ctx.fillStyle='#787888'; ctx.fillRect(-13+sh,-2,8,4); ctx.fillRect(-1+sh,-2,8,4); ctx.fillRect(11+sh,-2,8,4);
-    ctx.save(); ctx.translate(0,-9); ctx.rotate(rad); ctx.fillStyle='#222'; ctx.fillRect(0,-4,22,8); ctx.fillStyle='#ff5722'; ctx.fillRect(16,-5,6,10); ctx.restore();
-    ctx.fillStyle='#37474f'; ctx.fillRect(-14,-14,28,11); ctx.fillStyle='#fff'; ctx.fillRect(4,-11,5,5); ctx.fillStyle='#000'; ctx.fillRect(6,-10,2,3); ctx.restore();
+    const skin = p.skin || {id:'cannon'};
+    const x=Math.round(p.x), y=Math.round(p.y);
+    const flip=!isP1;
+    const s=1.05;
+    const id=skin.id||'cannon';
+    let hull='#5c6bc0', dark='#283593', light='#9fa8da', accent='#ff5722', eye='#fff';
+    if(id==='cannon'){ hull='#78909c'; dark='#37474f'; light='#b0bec5'; accent='#ff3d00'; }
+    else if(id==='carrot'){ hull='#ff8a65'; dark='#d84315'; light='#ffccbc'; accent='#ffd54f'; }
+    else if(id==='missile'){ hull='#546e7a'; dark='#263238'; light='#90a4ae'; accent='#ffab40'; }
+    else if(id==='multi'){ hull='#ab47bc'; dark='#6a1b9a'; light='#e1bee7'; accent='#e040fb'; }
+    else if(id==='poseidon'){ hull='#26a69a'; dark='#00695c'; light='#80cbc4'; accent='#00e5ff'; }
+    else if(id==='secwind'){ hull='#4dd0e1'; dark='#00838f'; light='#b2ebf2'; accent='#00bcd4'; }
+    else if(id==='crossbow'){ hull='#9ccc65'; dark='#558b2f'; light='#dcedc8'; accent='#76ff03'; }
+    else if(id==='supertank'){ hull='#ef5350'; dark='#b71c1c'; light='#ffcdd2'; accent='#ff1744'; eye='#ffeb3b'; }
+    else if(id==='duke'){ hull='#aed581'; dark='#689f38'; light='#f1f8e9'; accent='#aeea00'; }
+    else if(id==='catapult'){ hull='#a1887f'; dark='#5d4037'; light='#d7ccc8'; accent='#ff9800'; }
+
+    // 발사 각도와 동일한 좌표계: 0도=수평, 90도=수직위
+    // P1: 각도 그대로 / P2(좌우반전): 수평 기준 앙각으로 변환
+    let elev = p.angle;
+    if(flip) elev = 180 - p.angle; // 135도 → 45도 앙각
+    elev = Math.max(0, Math.min(90, elev));
+    const barrelRad = -elev * Math.PI / 180;
+
+    ctx.save();
+    ctx.translate(x,y);
+    if(flip) ctx.scale(-1,1);
+    ctx.scale(s,s);
+
+    // shadow + tracks
+    ctx.fillStyle='rgba(0,0,0,0.25)'; ctx.beginPath(); ctx.ellipse(0,5,20,4,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=dark; ctx.fillRect(-20,-1,40,8);
+    ctx.fillStyle='#222'; for(let i=-2;i<=2;i++) ctx.fillRect(i*7-2+sh,1,5,5);
+
+    // body
+    ctx.fillStyle=hull; ctx.beginPath(); ctx.ellipse(0,-12,18,13,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=dark; ctx.beginPath(); ctx.ellipse(2,-14,11,9,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=eye; ctx.beginPath(); ctx.ellipse(-1,-16,4.5,5,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(9,-16,4.5,5,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#111'; ctx.beginPath(); ctx.ellipse(0,-15,2,2.5,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(10,-15,2,2.5,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.fillRect(-1.5,-17,1.2,1.2); ctx.fillRect(8.5,-17,1.2,1.2);
+    ctx.strokeStyle='#111'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(4,-9,4,0.2,Math.PI-0.2); ctx.stroke();
+    if(id==='supertank'){ ctx.fillStyle='#ffeb3b'; ctx.beginPath(); ctx.moveTo(-5,-28); ctx.lineTo(0,-34); ctx.lineTo(5,-28); ctx.fill(); }
+    if(skin.isPoison){ ctx.fillStyle='#76ff03'; ctx.fillRect(-12,-24,7,3); }
+
+    // 포신 피벗: 몸체 앞쪽. 0도일 때 수평, 각도 올리면 위로 회전
+    ctx.save();
+    ctx.translate(10, -14);
+    ctx.rotate(barrelRad);
+    // 포신 본체 (로컬 +X 방향 = 발사 방향)
+    if(id==='multi'){
+      for(let i=-1;i<=1;i++){
+        ctx.fillStyle=dark; ctx.fillRect(0, i*4-1.5, 18, 3);
+        ctx.fillStyle=accent; ctx.fillRect(16, i*4-2.5, 5, 5);
+      }
+    } else if(id==='cannon'){
+      ctx.fillStyle=dark; ctx.fillRect(0, -4, 22, 8);
+      ctx.fillStyle='#222'; ctx.fillRect(18, -5, 6, 10);
+      ctx.fillStyle=accent; ctx.fillRect(22, -3, 4, 6);
+    } else if(id==='catapult'){
+      ctx.fillStyle=dark; ctx.fillRect(0, -3, 14, 6);
+      ctx.fillStyle=accent; ctx.beginPath(); ctx.arc(16, 0, 5, 0, Math.PI*2); ctx.fill();
+    } else {
+      ctx.fillStyle=dark; ctx.fillRect(0, -3, 18, 6);
+      ctx.fillStyle=accent; ctx.fillRect(15, -4, 6, 8);
+    }
+    // 포구 표시
+    ctx.fillStyle='#111'; ctx.fillRect(Math.max(16, id==='cannon'?24:16), -2, 3, 4);
+    ctx.restore();
+
+    ctx.restore();
   }
   function gameLoop(){
     animFrame++; ctx.clearRect(0,0,800,500);
@@ -625,7 +1306,7 @@
     stars.forEach(s=>{ ctx.fillStyle='rgba(255,255,255,'+(s.alpha*(.5+Math.sin(animFrame*.05+s.x)*.3))+')'; ctx.fillRect(s.x,s.y,s.size,s.size); });
     clouds.forEach(c=>{ c.x+=c.speed; if(c.x>850)c.x=-100; drawPixelCloud(c.x,c.y,c.scale); });
     drawFortressBackground(); ctx.drawImage(terrainCanvas,0,0);
-    if(document.getElementById('fLobby').style.display==='none'){
+    if(document.getElementById('fLobby').style.display==='none' && !document.getElementById('fTankSelect').classList.contains('show') && document.getElementById('fHud').style.display!=='none'){
       if(!isPaused){
         updateTankPhysics(p1); updateTankPhysics(p2);
         if(!isOver&&bullets.length===0){
