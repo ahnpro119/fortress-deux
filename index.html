@@ -8,6 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="포트리스2" />
   <meta name="theme-color" content="#070910" />
+  <meta name="apple-touch-fullscreen" content="yes" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="apple-touch-icon" href="./icon-180.png" />
   <link rel="icon" type="image/png" href="./icon-192.png" />
@@ -33,7 +34,7 @@
     @keyframes blink { from{opacity:.55} to{opacity:1} }
     #app { width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
     #scale-slot { width:800px; height:500px; }
-    #fortress-game { position:relative; width:800px; height:500px; background:#000; overflow:hidden; user-select:none; border:3px solid #334; border-radius:8px; transform-origin:top left; box-shadow:0 10px 30px rgba(0,0,0,.8); }
+    #fortress-game { position:relative; width:800px; height:500px; background:#000; overflow:hidden; user-select:none; border:0; border-radius:0; transform-origin:top left; box-shadow:none; }
     #fortress-game canvas { display:block; image-rendering:pixelated; touch-action:none; }
     #fortress-game .screen { position:absolute; inset:0; z-index:10; background:rgba(10,12,24,.95); display:flex; flex-direction:column; justify-content:center; align-items:center; padding:12px; text-align:center; }
     .mode-select { display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; justify-content:center; }
@@ -73,7 +74,7 @@
       font-size:14px !important;
       padding:8px 12px !important;
       gap:8px;
-      right:96px !important;
+      right:8px !important;
     }
     .hud .angle-big {
       display:inline-block;
@@ -108,20 +109,37 @@
     }
     #fPowerLabel.show { display:block; }
     .top-actions {
-      position:absolute; top:8px; right:8px; z-index:25;
+      pointer-events:auto;
+      position:absolute;
+      top:max(8px, env(safe-area-inset-top));
+      right:max(8px, env(safe-area-inset-right));
+      z-index:50;
       display:flex; flex-direction:row; align-items:center; gap:10px;
     }
     .top-actions button {
       position:static !important;
-      width:44px; height:44px; border-radius:50%;
+      width:48px; height:48px; border-radius:50%;
       border:2px solid #00e5ff; background:rgba(10,12,24,.92);
-      color:#00e5ff; font-size:16px; font-weight:900; cursor:pointer;
-      flex:0 0 44px;
+      color:#00e5ff; font-size:17px; font-weight:900; cursor:pointer;
+      flex:0 0 48px;
+      -webkit-user-select:none; user-select:none;
     }
     .top-actions button.pause-btn { border-color:#ffeb3b; color:#ffeb3b; }
     .top-actions button.exit-btn { border-color:#ff5252; color:#ff5252; }
     .top-actions.lobby-only-music #pauseBtn,
     .top-actions.lobby-only-music #exitBtn { display:none; }
+    /* 모바일 전체화면 느낌 */
+    body.standalone-mode #fortress-game { border:0; border-radius:0; box-shadow:none; }
+    body.browser-mode #app { padding:0; }
+    #fsTip {
+      display:none; position:absolute; left:50%; top:max(12px, env(safe-area-inset-top));
+      transform:translateX(-50%); z-index:75; width:min(440px,92%);
+      background:rgba(8,12,28,.96); border:1px solid #ffeb3b; border-radius:12px;
+      padding:12px 14px; font-size:13px; text-align:center; color:#fff;
+    }
+    #fsTip.show { display:block; }
+    #fsTip b { color:#ffeb3b; }
+    #fsTip .row { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:10px; }
     .pad {
       grid-template-columns:64px 64px !important;
       grid-template-rows:58px 58px !important;
@@ -147,11 +165,6 @@
 <div id="app">
   <div id="scale-slot">
     <div id="fortress-game">
-      <div class="top-actions lobby-only-music">
-        <button id="pauseBtn" class="pause-btn" type="button" title="일시정지">⏸</button>
-        <button id="exitBtn" class="exit-btn" type="button" title="종료">✕</button>
-        <button id="musicBtn" type="button" title="음악">♪</button>
-      </div>
       <canvas id="fCanvas" width="800" height="500"></canvas>
       <div id="fTurnIndicator" class="turn-indicator">1P 턴</div>
       <div id="fLobby" class="screen">
@@ -206,6 +219,11 @@
   </div>
 </div>
 <div id="touch-hud">
+  <div class="top-actions lobby-only-music">
+    <button id="pauseBtn" class="pause-btn" type="button" title="일시정지">⏸</button>
+    <button id="exitBtn" class="exit-btn" type="button" title="종료">✕</button>
+    <button id="musicBtn" type="button" title="음악">♪</button>
+  </div>
   <div class="pad">
     <button type="button" data-code="ArrowUp">↑</button>
     <button type="button" data-code="ArrowDown">↓</button>
@@ -214,7 +232,15 @@
   </div>
   <div id="fireWrap"><button type="button" id="fireBtn">FIRE</button><div id="fireHelp">길게=충전 / 떼기=발사</div></div>
 </div>
-<div id="installTip">아이폰: 사파리 하단 <b>공유</b> → <b>홈 화면에 추가</b> 하면 앱처럼 가로 전체화면으로 실행됩니다.<div style="margin-top:8px;"><button class="btn" type="button" id="closeTip" style="min-height:36px;padding:6px 16px;font-size:13px;">확인</button></div></div>
+<div id="fsTip">
+  <div><b>전체화면으로 플레이</b></div>
+  <div style="margin-top:6px;line-height:1.45;color:#c9d2ef;">아이폰은 사파리에서 주소창을 숨길 수 없습니다.<br><b>공유 → 홈 화면에 추가</b> 후 아이콘으로 실행하면 전체화면입니다.</div>
+  <div class="row">
+    <button class="btn" type="button" id="fsTryBtn" style="min-height:40px;padding:8px 16px;font-size:14px;">전체화면 시도</button>
+    <button class="btn" type="button" id="fsCloseBtn" style="min-height:40px;padding:8px 16px;font-size:14px;background:linear-gradient(#555,#222);box-shadow:0 4px 0 #111;">닫기</button>
+  </div>
+</div>
+<div id="installTip">아이폰: 사파리 하단 <b>공유</b> → <b>홈 화면에 추가</b> 하면 주소창 없이 전체화면으로 실행됩니다.<div style="margin-top:8px;"><button class="btn" type="button" id="closeTip" style="min-height:36px;padding:6px 16px;font-size:13px;">확인</button></div></div>
 </div>
 <script>
 (function(){
@@ -290,25 +316,38 @@
     }
     fitGame();
   }
-  function lockLandscape(){
-    const root = document.documentElement;
+  function requestFs(){
+    const el = document.documentElement;
     try {
-      if (root.requestFullscreen) root.requestFullscreen().catch(function(){});
-      else if (root.webkitRequestFullscreen) root.webkitRequestFullscreen();
+      if (document.fullscreenElement || document.webkitFullscreenElement) return Promise.resolve();
+      if (el.requestFullscreen) return el.requestFullscreen();
+      if (el.webkitRequestFullscreen) { el.webkitRequestFullscreen(); return Promise.resolve(); }
     } catch (e) {}
+    return Promise.resolve();
+  }
+  function lockLandscape(){
+    requestFs().catch(function(){});
     try {
       if (screen.orientation && screen.orientation.lock) {
         screen.orientation.lock('landscape').catch(function(){});
       }
     } catch (e) {}
+    // 주소창 축소 시도 (안드로이드 등)
+    setTimeout(function(){ try { window.scrollTo(0, 1); } catch(e){} }, 50);
     applyLandscapeView();
   }
   function fitGame(){
     const game=document.getElementById('fortress-game'), slot=document.getElementById('scale-slot'), hud=document.getElementById('touch-hud');
-    hud.classList.toggle('show', (isTouchDevice()||Math.min(window.innerWidth,window.innerHeight)<=920) && document.getElementById('intro').classList.contains('hide'));
+    const introHidden = document.getElementById('intro').classList.contains('hide');
+    // 터치 HUD/상단버튼은 인트로 이후 항상 표시 (데스크톱 포함)
+    hud.classList.toggle('show', introHidden);
     const vs = viewSize();
-    const scale=Math.min(Math.max(280,vs.w-8)/800, Math.max(160,vs.h-8)/500);
-    game.style.transform='scale('+scale+')'; slot.style.width=(800*scale)+'px'; slot.style.height=(500*scale)+'px';
+    // 여백 거의 없이 화면을 최대한 채움
+    const pad = isStandalone() ? 0 : 2;
+    const scale = Math.min((vs.w - pad) / 800, (vs.h - pad) / 500);
+    game.style.transform = 'scale(' + scale + ')';
+    slot.style.width = (800 * scale) + 'px';
+    slot.style.height = (500 * scale) + 'px';
   }
   function playOpening(){
     const gate=document.getElementById('tapGate'), title=document.getElementById('introTitle'), sub=document.getElementById('introSub');
@@ -342,7 +381,11 @@
       if(t<3.8) requestAnimationFrame(frame);
       else {
         document.getElementById('intro').classList.add('hide'); fitGame();
-        if(!isStandalone() && isTouchDevice()) document.getElementById('installTip').classList.add('show');
+        if (isStandalone()) document.body.classList.add('standalone-mode');
+        else document.body.classList.add('browser-mode');
+        if(!isStandalone() && isTouchDevice()) {
+          document.getElementById('fsTip').classList.add('show');
+        }
       }
     }
     requestAnimationFrame(frame);
@@ -358,6 +401,15 @@
   }
   document.getElementById('tapGate').addEventListener('pointerup', startIntro);
   document.getElementById('closeTip').onclick=()=>document.getElementById('installTip').classList.remove('show');
+  document.getElementById('fsCloseBtn').onclick=function(){
+    document.getElementById('fsTip').classList.remove('show');
+    if(!isStandalone() && isTouchDevice()) document.getElementById('installTip').classList.add('show');
+  };
+  document.getElementById('fsTryBtn').onclick=function(){
+    lockLandscape();
+    document.getElementById('fsTip').classList.remove('show');
+    if(!isStandalone() && isTouchDevice()) document.getElementById('installTip').classList.add('show');
+  };
 
   function setGameMode(mode){ gameMode=mode; document.getElementById('fModeAI').classList.toggle('active',mode==='AI'); document.getElementById('fModePvp').classList.toggle('active',mode==='PVP'); }
   document.getElementById('fModeAI').onclick=()=>setGameMode('AI');
@@ -438,7 +490,7 @@
     updateFuelUI(); randomizeWind(); updateTurnUI(); startTurnTimer();
   }
   function updateTurnUI(){ if(isOver) return; const el=document.getElementById('fTurnIndicator'); el.style.display='block'; if(turn==='P1'){ el.innerText='1P 턴'; el.style.background='rgba(0,229,255,.9)'; } else if(gameMode==='AI'){ el.innerText='AI 계산 중...'; el.style.background='rgba(255,82,82,.9)'; } else { el.innerText='2P 턴'; el.style.background='rgba(255,235,59,.9)'; } }
-  document.getElementById('fStartBtn').onclick=function(){ lockLandscape(); initStage(1); };
+  document.getElementById('fStartBtn').onclick=function(){ lockLandscape(); initStage(1); document.getElementById('fsTip').classList.remove('show'); };
   document.getElementById('fNextBtn').onclick=()=>initStage((currentStage>=10&&gameMode==='AI')?1:currentStage+1);
   function goLobby(){
     clearAllTimers(); bullets=[]; explosions=[]; particles=[]; poisonClouds=[];
