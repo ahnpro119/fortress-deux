@@ -49,7 +49,7 @@
     .power-container { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); width:260px; height:16px; background:#111; border:2px solid #fff; display:none; z-index:5; }
     .power-bar { width:0; height:100%; background:linear-gradient(to right,#ffeb3b,#ff5722); }
     .turn-indicator { position:absolute; top:62px; left:50%; transform:translateX(-50%); background:rgba(0,229,255,.9); color:#000; font-weight:800; padding:4px 12px; font-size:12px; border-radius:12px; display:none; z-index:5; white-space:nowrap; }
-    #musicBtn { position:absolute; top:8px; right:8px; z-index:20; width:40px; height:40px; border-radius:50%; border:2px solid #00e5ff; background:rgba(10,12,24,.9); color:#00e5ff; font-size:16px; }
+    #musicBtn { border-color:#00e5ff; color:#00e5ff; }
     #touch-hud { display:none; position:absolute; inset:0; pointer-events:none; z-index:40; }
     #touch-hud.show { display:block; }
     .pad { pointer-events:auto; position:absolute; left:max(10px,env(safe-area-inset-left)); bottom:max(10px,env(safe-area-inset-bottom)); display:grid; grid-template-columns:58px 58px; grid-template-rows:52px 52px; gap:8px; }
@@ -62,6 +62,76 @@
     #installTip { display:none; position:absolute; left:50%; bottom:12px; transform:translateX(-50%); z-index:70; background:rgba(8,12,28,.94); border:1px solid #00e5ff; border-radius:12px; padding:10px 14px; font-size:12px; width:min(420px,92%); text-align:center; }
     #installTip.show { display:block; }
     #installTip b { color:#ffeb3b; }
+    button, .btn, .mode-btn, .pad button, #fireBtn, #fireHelp, #touch-hud, #fHud, #fTurnIndicator {
+      -webkit-user-select:none !important;
+      user-select:none !important;
+      -webkit-touch-callout:none !important;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .pad button, #fireBtn { touch-action:none; font-family:inherit; }
+    .hud {
+      font-size:14px !important;
+      padding:8px 12px !important;
+      gap:8px;
+      right:96px !important;
+    }
+    .hud .angle-big {
+      display:inline-block;
+      margin-top:4px;
+      padding:2px 8px;
+      border-radius:6px;
+      background:#111;
+      border:1px solid #ffeb3b;
+      color:#ffeb3b;
+      font-size:18px;
+      font-weight:900;
+      line-height:1.2;
+    }
+    .hud .fuel-line { margin-top:3px; color:#9adfff; font-size:13px; font-weight:700; }
+    .wind-badge {
+      font-size:16px !important;
+      padding:4px 12px !important;
+      border-width:2px !important;
+      margin-top:4px !important;
+      letter-spacing:0.5px;
+    }
+    .timer-badge { font-size:14px !important; padding:3px 8px !important; }
+    .power-container {
+      width:300px !important;
+      height:22px !important;
+      bottom:14px !important;
+    }
+    #fPowerLabel {
+      position:absolute; left:50%; bottom:38px; transform:translateX(-50%);
+      z-index:5; display:none; font-weight:900; font-size:16px;
+      color:#ffeb3b; text-shadow:0 1px 2px #000; pointer-events:none;
+    }
+    #fPowerLabel.show { display:block; }
+    .top-actions {
+      position:absolute; top:8px; right:8px; z-index:25;
+      display:flex; flex-direction:row; align-items:center; gap:10px;
+    }
+    .top-actions button {
+      position:static !important;
+      width:44px; height:44px; border-radius:50%;
+      border:2px solid #00e5ff; background:rgba(10,12,24,.92);
+      color:#00e5ff; font-size:16px; font-weight:900; cursor:pointer;
+      flex:0 0 44px;
+    }
+    .top-actions button.pause-btn { border-color:#ffeb3b; color:#ffeb3b; }
+    .top-actions button.exit-btn { border-color:#ff5252; color:#ff5252; }
+    .top-actions.lobby-only-music #pauseBtn,
+    .top-actions.lobby-only-music #exitBtn { display:none; }
+    .pad {
+      grid-template-columns:64px 64px !important;
+      grid-template-rows:58px 58px !important;
+      gap:10px !important;
+    }
+    .pad button { font-size:24px !important; }
+    #fireWrap { width:128px !important; }
+    #fireBtn { height:120px !important; font-size:24px !important; }
+    #fireHelp { pointer-events:none; }
+    #fPause .pause-actions { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:12px; }
   </style>
 </head>
 <body>
@@ -77,7 +147,11 @@
 <div id="app">
   <div id="scale-slot">
     <div id="fortress-game">
-      <button id="musicBtn" type="button">♪</button>
+      <div class="top-actions lobby-only-music">
+        <button id="pauseBtn" class="pause-btn" type="button" title="일시정지">⏸</button>
+        <button id="exitBtn" class="exit-btn" type="button" title="종료">✕</button>
+        <button id="musicBtn" type="button" title="음악">♪</button>
+      </div>
       <canvas id="fCanvas" width="800" height="500"></canvas>
       <div id="fTurnIndicator" class="turn-indicator">1P 턴</div>
       <div id="fLobby" class="screen">
@@ -98,16 +172,36 @@
         </div>
       </div>
       <div id="fHud" class="hud">
-        <div><b id="fP1Name" style="color:#ffeb3b;">[1P]</b><br>HP <span id="fP1Hp">100</span> · <span id="fAngle">45</span>°</div>
+        <div>
+          <b id="fP1Name" style="color:#ffeb3b;">[1P]</b><br>
+          HP <span id="fP1Hp">100</span>
+          <div class="angle-big">각도 <span id="fAngle">45</span>°</div>
+          <div class="fuel-line">연료 <span id="fP1Fuel">100</span></div>
+        </div>
         <div class="center-info">
-          <span id="fMapName" style="color:#00e5ff;font-weight:700;font-size:11px;">Valley</span>
-          <span id="fStageLabel" style="color:#ffeb3b;font-weight:800;">STAGE 1 / 10</span>
+          <span id="fMapName" style="color:#00e5ff;font-weight:700;font-size:12px;">Valley</span>
+          <span id="fStageLabel" style="color:#ffeb3b;font-weight:800;font-size:13px;">STAGE 1 / 10</span>
           <div id="fWindBadge" class="wind-badge">바람 ▶ 0.0</div>
           <div id="fTimerBadge" class="timer-badge">🕒 10초</div>
         </div>
-        <div style="text-align:right;"><b id="fP2Name" style="color:#ff5252;">[2P]</b><br>HP <span id="fP2Hp">100</span> · <span id="fP2Angle">135</span>°<div id="fAiLevelTag" style="color:#ff5252;font-size:11px;font-weight:800;">LV.1</div></div>
+        <div style="text-align:right;">
+          <b id="fP2Name" style="color:#ff5252;">[2P]</b><br>
+          HP <span id="fP2Hp">100</span>
+          <div class="angle-big" style="border-color:#ff5252;color:#ff5252;">각도 <span id="fP2Angle">135</span>°</div>
+          <div class="fuel-line" style="justify-content:flex-end;">연료 <span id="fP2Fuel">100</span></div>
+          <div id="fAiLevelTag" style="color:#ff5252;font-size:12px;font-weight:800;">LV.1</div>
+        </div>
       </div>
+      <div id="fPowerLabel">파워 0%</div>
       <div id="fPowerContainer" class="power-container"><div id="fPowerBar" class="power-bar"></div></div>
+      <div id="fPause" class="screen" style="display:none;">
+        <h2 style="color:#ffeb3b;margin:0 0 8px;font-size:28px;">일시정지</h2>
+        <p style="color:#9adfff;margin:0 0 8px;">게임을 잠시 멈췄습니다</p>
+        <div class="pause-actions">
+          <button class="btn" id="fResumeBtn" type="button">계속하기</button>
+          <button class="btn" id="fExitToLobbyBtn" type="button" style="background:linear-gradient(#555,#222);box-shadow:0 4px 0 #111;">로비로</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -124,7 +218,7 @@
 </div>
 <script>
 (function(){
-  const keys={}; let gameMode='AI';
+  const keys={}; let gameMode='AI'; let isPaused=false;
   let audioCtx=null,masterGain=null,bgmMuted=false,bgmStarted=false,bgmTimer=null,bgmStep=0;
   let moveOsc=null,moveGain=null,isMovingSound=false;
   function isStandalone(){ return window.navigator.standalone===true || window.matchMedia('(display-mode: standalone)').matches; }
@@ -293,7 +387,7 @@
   let currentMap=MAPS[0],wind=0,turnTimeLeft=10,turnTimerInterval=null,currentStage=1,turn='P1',isOver=false;
   let bullets=[],explosions=[],particles=[],poisonClouds=[],animFrame=0,isCharging=false,currentPower=0,powerDir=1.2,isAiMoving=false;
   let bulletCheckTimer=null,aiMoveInterval=null,aiFireTimeout=null,fireInterval=null;
-  const p1={x:120,y:0,vy:0,maxHp:100,hp:100,angle:45,skin:SKINS[0]}, p2={x:680,y:0,vy:0,maxHp:100,hp:100,angle:135,skin:SKINS[0]};
+  const p1={x:120,y:0,vy:0,maxHp:100,hp:100,angle:45,fuel:100,maxFuel:100,skin:SKINS[0]}, p2={x:680,y:0,vy:0,maxHp:100,hp:100,angle:135,fuel:100,maxFuel:100,skin:SKINS[0]};
   function resetTerrain(stage){
     currentMap=MAPS[(stage-1)%MAPS.length]; tCtx.clearRect(0,0,800,500);
     tCtx.beginPath(); tCtx.moveTo(0,500); for(let x=0;x<=800;x++) tCtx.lineTo(x,currentMap.fn(x)); tCtx.lineTo(800,500); tCtx.closePath();
@@ -306,7 +400,7 @@
   function stopMoveSound(){ if(isMovingSound&&moveGain){ moveGain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.05); setTimeout(()=>{ if(moveOsc){try{moveOsc.stop();}catch(e){}} isMovingSound=false; },50); } }
   function playShootSound(){ ensureAudio(); if(!audioCtx) return; const osc=audioCtx.createOscillator(),gain=audioCtx.createGain(); osc.type='square'; osc.frequency.setValueAtTime(320,audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(40,audioCtx.currentTime+0.2); gain.gain.setValueAtTime(0.18,audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.2); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime+0.2); }
   function playExplodeSound(){ ensureAudio(); if(!audioCtx) return; const n=audioCtx.sampleRate*0.3,buf=audioCtx.createBuffer(1,n,audioCtx.sampleRate),data=buf.getChannelData(0); for(let i=0;i<n;i++) data[i]=Math.random()*2-1; const src=audioCtx.createBufferSource(); src.buffer=buf; const gain=audioCtx.createGain(); gain.gain.setValueAtTime(0.28,audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.3); src.connect(gain); gain.connect(audioCtx.destination); src.start(); }
-  function canControlNow(){ if(isOver||bullets.length>0) return false; if(document.getElementById('fLobby').style.display!=='none') return false; if(document.getElementById('fOver').style.display==='flex') return false; return turn==='P1' || (turn==='P2'&&gameMode==='PVP'); }
+  function canControlNow(){ if(isPaused||isOver||bullets.length>0) return false; if(document.getElementById('fLobby').style.display!=='none') return false; if(document.getElementById('fOver').style.display==='flex') return false; if(document.getElementById('fPause').style.display==='flex') return false; return turn==='P1' || (turn==='P2'&&gameMode==='PVP'); }
   function beginCharge(){ if(canControlNow()&&!isCharging){ isCharging=true; currentPower=0; powerDir=1.2; } }
   function releaseCharge(){ if(!isCharging) return; isCharging=false; fire(turn,turn==='P1'?p1:p2,(turn==='P1'?p1:p2).skin,1,currentPower); currentPower=0; document.getElementById('fPowerBar').style.width='0%'; }
   window.addEventListener('keydown',e=>{ ensureAudio(); startBgm(); if(e.code==='Space'){ e.preventDefault(); beginCharge(); } keys[e.code]=true; });
@@ -317,15 +411,17 @@
   bindHold(fireBtn,()=>{fireBtn.classList.add('held');beginCharge();},()=>{fireBtn.classList.remove('held');releaseCharge();});
   function clearAllTimers(){ stopMoveSound(); [turnTimerInterval,bulletCheckTimer,aiMoveInterval,fireInterval].forEach(id=>{ if(id) clearInterval(id); }); if(aiFireTimeout) clearTimeout(aiFireTimeout); turnTimerInterval=bulletCheckTimer=aiMoveInterval=fireInterval=aiFireTimeout=null; }
   function randomizeWind(){ wind=(Math.random()-0.5)*0.12; document.getElementById('fWindBadge').innerText='바람 '+(wind>=0?'▶':'◀')+' '+(Math.abs(wind)*100).toFixed(1); }
-  function startTurnTimer(){ if(turnTimerInterval) clearInterval(turnTimerInterval); turnTimeLeft=10; document.getElementById('fTimerBadge').innerText='🕒 '+turnTimeLeft+'초'; turnTimerInterval=setInterval(()=>{ if(isOver||bullets.length>0) return; turnTimeLeft--; document.getElementById('fTimerBadge').innerText='🕒 '+turnTimeLeft+'초'; if(turnTimeLeft<=0){ clearInterval(turnTimerInterval); isCharging=false; currentPower=0; document.getElementById('fPowerBar').style.width='0%'; fireBtn.classList.remove('held'); switchTurn(); } },1000); }
+  function updateFuelUI(){ document.getElementById('fP1Fuel').innerText=String(Math.round(p1.fuel)); document.getElementById('fP2Fuel').innerText=String(Math.round(p2.fuel)); }
+  function refillFuel(){ p1.fuel=p1.maxFuel; p2.fuel=p2.maxFuel; updateFuelUI(); }
+  function startTurnTimer(){ if(turnTimerInterval) clearInterval(turnTimerInterval); turnTimeLeft=10; document.getElementById('fTimerBadge').innerText='🕒 '+turnTimeLeft+'초'; turnTimerInterval=setInterval(()=>{ if(isPaused||isOver||bullets.length>0) return; turnTimeLeft--; document.getElementById('fTimerBadge').innerText='🕒 '+turnTimeLeft+'초'; if(turnTimeLeft<=0){ clearInterval(turnTimerInterval); isCharging=false; currentPower=0; document.getElementById('fPowerBar').style.width='0%'; document.getElementById('fPowerLabel').textContent='파워 0%'; fireBtn.classList.remove('held'); switchTurn(); } },1000); }
   function getRandomTank(){ if(Math.random()<0.05) return SKINS.find(s=>s.id==='supertank'); const f=SKINS.filter(s=>s.id!=='supertank'); return f[Math.floor(Math.random()*f.length)]; }
   function initStage(stage){
     ensureAudio(); startBgm(); clearAllTimers(); resetTerrain(stage); currentStage=stage;
     p1.skin=getRandomTank(); p2.skin=getRandomTank();
-    p1.maxHp=100; p1.hp=100; p1.x=120; p1.vy=0; p1.y=getTerrainY(p1.x); p1.angle=45;
+    p1.maxHp=100; p1.hp=100; p1.x=120; p1.vy=0; p1.y=getTerrainY(p1.x); p1.angle=45; p1.fuel=100; p1.maxFuel=100;
     const aiHp=gameMode==='AI'?Math.round(100+(stage-1)*(350/9)):100;
-    p2.maxHp=aiHp; p2.hp=aiHp; p2.x=680; p2.vy=0; p2.y=getTerrainY(p2.x); p2.angle=135;
-    turn='P1'; isOver=false; bullets=[]; explosions=[]; particles=[]; poisonClouds=[]; isCharging=false; currentPower=0; isAiMoving=false;
+    p2.maxHp=aiHp; p2.hp=aiHp; p2.x=680; p2.vy=0; p2.y=getTerrainY(p2.x); p2.angle=135; p2.fuel=100; p2.maxFuel=100;
+    turn='P1'; isOver=false; isPaused=false; bullets=[]; explosions=[]; particles=[]; poisonClouds=[]; isCharging=false; currentPower=0; isAiMoving=false;
     document.getElementById('fMapName').innerText=currentMap.name;
     document.getElementById('fStageLabel').innerText=gameMode==='AI'?('STAGE '+stage+' / 10'):'VERSUS';
     document.getElementById('fP1Name').innerText='[1P '+p1.skin.name.split(' ')[0]+']';
@@ -335,14 +431,50 @@
     const titles=['LV.1 초보','LV.2 훈련병','LV.3 일반병','LV.4 베테랑','LV.5 용병','LV.6 엘리트','LV.7 저격수','LV.8 챔피언','LV.9 마스터','LV.10 보스'];
     document.getElementById('fAiLevelTag').style.display=gameMode==='AI'?'block':'none';
     if(gameMode==='AI') document.getElementById('fAiLevelTag').innerText=titles[stage-1];
-    document.getElementById('fLobby').style.display='none'; document.getElementById('fOver').style.display='none';
-    document.getElementById('fHud').style.display='flex'; document.getElementById('fPowerContainer').style.display='block';
-    randomizeWind(); updateTurnUI(); startTurnTimer();
+    document.getElementById('fLobby').style.display='none'; document.getElementById('fOver').style.display='none'; document.getElementById('fPause').style.display='none';
+    document.getElementById('fHud').style.display='flex'; document.getElementById('fPowerContainer').style.display='block'; document.getElementById('fPowerLabel').classList.add('show');
+    document.getElementById('fPowerLabel').textContent='파워 0%';
+    document.querySelector('.top-actions').classList.remove('lobby-only-music');
+    updateFuelUI(); randomizeWind(); updateTurnUI(); startTurnTimer();
   }
   function updateTurnUI(){ if(isOver) return; const el=document.getElementById('fTurnIndicator'); el.style.display='block'; if(turn==='P1'){ el.innerText='1P 턴'; el.style.background='rgba(0,229,255,.9)'; } else if(gameMode==='AI'){ el.innerText='AI 계산 중...'; el.style.background='rgba(255,82,82,.9)'; } else { el.innerText='2P 턴'; el.style.background='rgba(255,235,59,.9)'; } }
   document.getElementById('fStartBtn').onclick=function(){ lockLandscape(); initStage(1); };
   document.getElementById('fNextBtn').onclick=()=>initStage((currentStage>=10&&gameMode==='AI')?1:currentStage+1);
-  document.getElementById('fRetryBtn').onclick=()=>{ clearAllTimers(); bullets=[]; explosions=[]; particles=[]; poisonClouds=[]; isOver=false; isCharging=false; document.getElementById('fHud').style.display='none'; document.getElementById('fOver').style.display='none'; document.getElementById('fPowerContainer').style.display='none'; document.getElementById('fTurnIndicator').style.display='none'; document.getElementById('fLobby').style.display='flex'; };
+  function goLobby(){
+    clearAllTimers(); bullets=[]; explosions=[]; particles=[]; poisonClouds=[];
+    isOver=false; isPaused=false; isCharging=false; currentPower=0;
+    document.getElementById('fHud').style.display='none';
+    document.getElementById('fOver').style.display='none';
+    document.getElementById('fPause').style.display='none';
+    document.getElementById('fPowerContainer').style.display='none';
+    document.getElementById('fPowerLabel').classList.remove('show');
+    document.getElementById('fTurnIndicator').style.display='none';
+    document.getElementById('fLobby').style.display='flex';
+    document.querySelector('.top-actions').classList.add('lobby-only-music');
+    Object.keys(keys).forEach(k=>keys[k]=false);
+    document.querySelectorAll('.pad button.held, #fireBtn.held').forEach(b=>b.classList.remove('held'));
+  }
+  document.getElementById('fRetryBtn').onclick=goLobby;
+  function setPaused(v){
+    if(document.getElementById('fLobby').style.display!=='none') return;
+    if(document.getElementById('fOver').style.display==='flex') return;
+    isPaused=v;
+    document.getElementById('fPause').style.display=v?'flex':'none';
+    if(v){
+      isCharging=false; currentPower=0;
+      document.getElementById('fPowerBar').style.width='0%';
+      document.getElementById('fPowerLabel').textContent='파워 0%';
+      fireBtn.classList.remove('held');
+      Object.keys(keys).forEach(k=>keys[k]=false);
+      stopMoveSound();
+    } else if(!isOver) {
+      startTurnTimer();
+    }
+  }
+  document.getElementById('pauseBtn').onclick=function(e){ e.stopPropagation(); if(document.getElementById('fLobby').style.display!=='none'||isOver) return; setPaused(!isPaused); };
+  document.getElementById('exitBtn').onclick=function(e){ e.stopPropagation(); if(document.getElementById('fLobby').style.display!=='none') return; setPaused(false); goLobby(); };
+  document.getElementById('fResumeBtn').onclick=function(){ setPaused(false); };
+  document.getElementById('fExitToLobbyBtn').onclick=function(){ setPaused(false); goLobby(); };
   function fire(owner,shooter,skin,dmgMult,shotPower){
     if(isOver) return; if(turnTimerInterval) clearInterval(turnTimerInterval); let fired=0; if(fireInterval) clearInterval(fireInterval);
     fireInterval=setInterval(()=>{
@@ -383,11 +515,11 @@
     poisonClouds.forEach(pc=>{ [p1,p2].forEach(p=>{ if(Math.hypot(p.x-pc.x,p.y-pc.y)<=pc.radius) p.hp=Math.max(0,p.hp-pc.damage); }); });
     document.getElementById('fP1Hp').innerText=p1.hp+'/'+p1.maxHp; document.getElementById('fP2Hp').innerText=p2.hp+'/'+p2.maxHp;
     if(p1.hp<=0||p2.hp<=0){ endGame(p2.hp<=0); return; } randomizeWind();
-    if(turn==='P1'){ turn='P2'; updateTurnUI(); startTurnTimer(); if(gameMode==='AI') setTimeout(executeEnemyTurn,600); } else { turn='P1'; updateTurnUI(); startTurnTimer(); }
+    if(turn==='P1'){ turn='P2'; p2.fuel=p2.maxFuel; updateFuelUI(); updateTurnUI(); startTurnTimer(); if(gameMode==='AI') setTimeout(executeEnemyTurn,600); } else { turn='P1'; p1.fuel=p1.maxFuel; updateFuelUI(); updateTurnUI(); startTurnTimer(); }
   }
   function endGame(p1Win){
     if(isOver) return; isOver=true; clearAllTimers();
-    document.getElementById('fHud').style.display='none'; document.getElementById('fPowerContainer').style.display='none'; document.getElementById('fTurnIndicator').style.display='none'; document.getElementById('fOver').style.display='flex';
+    isPaused=false; document.getElementById('fPause').style.display='none'; document.getElementById('fHud').style.display='none'; document.getElementById('fPowerContainer').style.display='none'; document.getElementById('fPowerLabel').classList.remove('show'); document.getElementById('fTurnIndicator').style.display='none'; document.getElementById('fOver').style.display='flex';
     const res=document.getElementById('fResult'), sub=document.getElementById('fSubText'), nextBtn=document.getElementById('fNextBtn');
     if(p1Win){ if(gameMode==='AI'){ if(currentStage>=10){ res.innerText='ALL CLEAR!'; sub.innerText='10단계 보스를 모두 물리쳤습니다!'; nextBtn.innerText='처음부터'; } else { res.innerText='STAGE '+currentStage+' 승리!'; sub.innerText='다음 단계로 진출합니다.'; nextBtn.innerText='STAGE '+(currentStage+1); } } else { res.innerText='1P 승리!'; sub.innerText='상대 탱크를 파괴했습니다.'; nextBtn.innerText='다시 하기'; } }
     else { res.innerText=gameMode==='AI'?('STAGE '+currentStage+' 패배'):'2P 승리!'; sub.innerText='탱크가 파괴되었거나 시간 초과입니다.'; nextBtn.innerText='재도전'; }
@@ -424,32 +556,39 @@
     clouds.forEach(c=>{ c.x+=c.speed; if(c.x>850)c.x=-100; drawPixelCloud(c.x,c.y,c.scale); });
     drawFortressBackground(); ctx.drawImage(terrainCanvas,0,0);
     if(document.getElementById('fLobby').style.display==='none'){
-      updateTankPhysics(p1); updateTankPhysics(p2);
-      if(!isOver&&bullets.length===0){
-        const tank=turn==='P1'?p1:(gameMode==='PVP'?p2:null);
-        if(tank){
-          if(keys.KeyA||keys.ArrowLeft){ tank.x=Math.max(20,tank.x-1.2); tank.y=getTerrainY(tank.x); startMoveSound(); }
-          else if(keys.KeyD||keys.ArrowRight){ tank.x=Math.min(780,tank.x+1.2); tank.y=getTerrainY(tank.x); startMoveSound(); }
-          else if(!isAiMoving) stopMoveSound();
-          if(keys.KeyW||keys.ArrowUp){ if(turn==='P1') p1.angle=Math.min(90,p1.angle+0.6); else p2.angle=Math.min(180,p2.angle+0.6); }
-          if(keys.KeyS||keys.ArrowDown){ if(turn==='P1') p1.angle=Math.max(0,p1.angle-0.6); else p2.angle=Math.max(90,p2.angle-0.6); }
-          document.getElementById('fAngle').innerText=String(Math.round(p1.angle)); document.getElementById('fP2Angle').innerText=String(Math.round(p2.angle));
+      if(!isPaused){
+        updateTankPhysics(p1); updateTankPhysics(p2);
+        if(!isOver&&bullets.length===0){
+          const tank=turn==='P1'?p1:(gameMode==='PVP'?p2:null);
+          if(tank){
+            let moved=false;
+            if((keys.KeyA||keys.ArrowLeft) && tank.fuel>0){ tank.x=Math.max(20,tank.x-1.2); tank.y=getTerrainY(tank.x); tank.fuel=Math.max(0,tank.fuel-0.35); moved=true; startMoveSound(); }
+            else if((keys.KeyD||keys.ArrowRight) && tank.fuel>0){ tank.x=Math.min(780,tank.x+1.2); tank.y=getTerrainY(tank.x); tank.fuel=Math.max(0,tank.fuel-0.35); moved=true; startMoveSound(); }
+            else if(!isAiMoving) stopMoveSound();
+            if(keys.KeyW||keys.ArrowUp){ if(turn==='P1') p1.angle=Math.min(90,p1.angle+0.6); else p2.angle=Math.min(180,p2.angle+0.6); }
+            if(keys.KeyS||keys.ArrowDown){ if(turn==='P1') p1.angle=Math.max(0,p1.angle-0.6); else p2.angle=Math.max(90,p2.angle-0.6); }
+            if(moved) updateFuelUI();
+            document.getElementById('fAngle').innerText=String(Math.round(p1.angle)); document.getElementById('fP2Angle').innerText=String(Math.round(p2.angle));
+          }
         }
+        if(isCharging){ currentPower+=powerDir*0.75; if(currentPower>=100){currentPower=100;powerDir=-1;} if(currentPower<=0){currentPower=0;powerDir=1;} document.getElementById('fPowerBar').style.width=currentPower+'%'; document.getElementById('fPowerLabel').textContent='파워 '+Math.round(currentPower)+'%'; }
+        if(turn==='P1') drawTrajectory(p1); else if(gameMode==='PVP') drawTrajectory(p2);
       }
-      if(isCharging){ currentPower+=powerDir*1.5; if(currentPower>=100){currentPower=100;powerDir=-1;} if(currentPower<=0){currentPower=0;powerDir=1;} document.getElementById('fPowerBar').style.width=currentPower+'%'; }
-      if(turn==='P1') drawTrajectory(p1); else if(gameMode==='PVP') drawTrajectory(p2);
       drawPixelTank(p1,true); drawPixelTank(p2,false);
-      poisonClouds.forEach(pc=>{ pc.duration--; ctx.fillStyle='rgba(118,255,3,'+(pc.opacity*(pc.duration/180))+')'; ctx.beginPath(); ctx.arc(pc.x,pc.y,pc.radius,0,Math.PI*2); ctx.fill(); });
-      poisonClouds=poisonClouds.filter(pc=>pc.duration>0);
-      bullets.forEach(b=>{ if(!b.alive) return; b.vx+=wind; b.x+=b.vx; b.vy+=0.15; b.y+=b.vy; drawHighQualityBullet(b); if(b.y>=getTerrainY(b.x)||b.x<0||b.x>800||b.y>520){ b.alive=false; createExplosion(b.x,b.y,b.skin.cSize,b.skin); [p1,p2].forEach(p=>{ const dist=Math.hypot(p.x-b.x,p.y-b.y); if(dist<b.skin.cSize+12){ const dmg=Math.round(b.skin.baseDmg*b.dmgMult*(1-dist/(b.skin.cSize+25))); p.hp=Math.max(0,p.hp-Math.max(5,dmg)); document.getElementById('fP1Hp').innerText=p1.hp+'/'+p1.maxHp; document.getElementById('fP2Hp').innerText=p2.hp+'/'+p2.maxHp; } }); } });
-      explosions.forEach(ex=>{ ex.radius+=2; ctx.fillStyle='rgba(255,87,34,.7)'; ctx.beginPath(); ctx.arc(ex.x,ex.y,ex.radius,0,Math.PI*2); ctx.fill(); });
-      explosions=explosions.filter(ex=>ex.radius<ex.maxRadius);
-      particles.forEach(pt=>{ pt.x+=pt.vx; pt.y+=pt.vy; pt.life-=pt.decay; ctx.fillStyle=pt.color; ctx.fillRect(pt.x,pt.y,pt.size,pt.size); });
-      particles=particles.filter(pt=>pt.life>0);
+      if(!isPaused){
+        poisonClouds.forEach(pc=>{ pc.duration--; ctx.fillStyle='rgba(118,255,3,'+(pc.opacity*(pc.duration/180))+')'; ctx.beginPath(); ctx.arc(pc.x,pc.y,pc.radius,0,Math.PI*2); ctx.fill(); });
+        poisonClouds=poisonClouds.filter(pc=>pc.duration>0);
+        bullets.forEach(b=>{ if(!b.alive) return; b.vx+=wind; b.x+=b.vx; b.vy+=0.15; b.y+=b.vy; drawHighQualityBullet(b); if(b.y>=getTerrainY(b.x)||b.x<0||b.x>800||b.y>520){ b.alive=false; createExplosion(b.x,b.y,b.skin.cSize,b.skin); [p1,p2].forEach(p=>{ const dist=Math.hypot(p.x-b.x,p.y-b.y); if(dist<b.skin.cSize+12){ const dmg=Math.round(b.skin.baseDmg*b.dmgMult*(1-dist/(b.skin.cSize+25))); p.hp=Math.max(0,p.hp-Math.max(5,dmg)); document.getElementById('fP1Hp').innerText=p1.hp+'/'+p1.maxHp; document.getElementById('fP2Hp').innerText=p2.hp+'/'+p2.maxHp; } }); } });
+        explosions.forEach(ex=>{ ex.radius+=2; ctx.fillStyle='rgba(255,87,34,.7)'; ctx.beginPath(); ctx.arc(ex.x,ex.y,ex.radius,0,Math.PI*2); ctx.fill(); });
+        explosions=explosions.filter(ex=>ex.radius<ex.maxRadius);
+        particles.forEach(pt=>{ pt.x+=pt.vx; pt.y+=pt.vy; pt.life-=pt.decay; ctx.fillStyle=pt.color; ctx.fillRect(pt.x,pt.y,pt.size,pt.size); });
+        particles=particles.filter(pt=>pt.life>0);
+      }
     }
     requestAnimationFrame(gameLoop);
   }
-  document.addEventListener('touchmove', e=>{ if(e.target.closest('#touch-hud,#fortress-game,#intro,#rotateLock')) e.preventDefault(); }, {passive:false});
+  document.addEventListener('selectstart', e=>{ if(e.target.closest('button,#touch-hud,#fortress-game')) e.preventDefault(); });
+  document.addEventListener('touchmove', e=>{ if(e.target.closest('#touch-hud,#fortress-game,#intro,#stage')) e.preventDefault(); }, {passive:false});
   window.addEventListener('resize', applyLandscapeView);
   window.addEventListener('orientationchange', function(){ setTimeout(applyLandscapeView, 250); });
   applyLandscapeView();
